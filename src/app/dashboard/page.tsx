@@ -3,8 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useKanbanStore } from '@/store/useKanbanStore';
-import { Loader2, Kanban, Plus, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2, Kanban, Plus } from 'lucide-react';
+import CreateBoardModal from '@/components/modals/CreateBoardModal';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -41,27 +41,22 @@ export default function DashboardPage() {
 
         <h2 className="text-xl font-extrabold text-white mb-2">Welcome to Trilho!</h2>
         <p className="text-xs text-slate-400 mb-6 leading-relaxed">
-          You don't have any Kanban boards yet. Create your first board or generate demo seed data to get started.
+          You don't have any Kanban boards yet. Create your first board to get started.
         </p>
 
-        <div className="w-full space-y-3">
+        <div className="w-full">
           <button
             onClick={() => setIsCreateBoardModalOpen(true)}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-blue-500/20"
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-blue-500/20 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Create New Board</span>
           </button>
-
-          <Link
-            href="/login"
-            className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition border border-slate-700 block"
-          >
-            <span>Go to Login / Seed Demo Data</span>
-            <ArrowRight className="w-4 h-4 text-slate-400" />
-          </Link>
         </div>
       </div>
+
+      {/* Modal for creating a board */}
+      <CreateBoardModal />
     </div>
   );
 }

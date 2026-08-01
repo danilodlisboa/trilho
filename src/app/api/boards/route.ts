@@ -15,14 +15,15 @@ export async function GET() {
     await connectToDatabase();
 
     let userId = session.user.id;
-    if (!userId) {
-      const dbUser = await User.findOne({ email: session.user.email });
-      if (dbUser) userId = dbUser._id.toString();
+    const dbUser = await User.findOne({
+      $or: [{ _id: userId }, { email: session.user.email?.toLowerCase() }],
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ error: 'Unauthorized. User not found in database.' }, { status: 401 });
     }
 
-    if (!userId) {
-      return NextResponse.json({ error: 'User not found.' }, { status: 404 });
-    }
+    userId = dbUser._id.toString();
 
     const boards = await Board.find({
       $or: [{ ownerId: userId }, { members: userId }],
@@ -53,10 +54,15 @@ export async function POST(req: Request) {
     await connectToDatabase();
 
     let userId = session.user.id;
-    if (!userId) {
-      const dbUser = await User.findOne({ email: session.user.email });
-      if (dbUser) userId = dbUser._id.toString();
+    const dbUser = await User.findOne({
+      $or: [{ _id: userId }, { email: session.user.email?.toLowerCase() }],
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ error: 'Unauthorized. User not found in database.' }, { status: 401 });
     }
+
+    userId = dbUser._id.toString();
 
     const board = await Board.create({
       title: title.trim(),

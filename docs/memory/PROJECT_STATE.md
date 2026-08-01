@@ -18,10 +18,11 @@
 - **Testing Framework:** Vitest + React Testing Library + JSDOM
 
 ## 📂 Key Modules & Component Map
-- **`/src/app/api`**: REST Endpoints (`/api/register`, `/api/users`, `/api/boards`, `/api/columns`, `/api/cards`, `/api/seed`) & API unit tests in `/src/app/api/__tests__`.
+- **`/src/app/api`**: REST Endpoints (`/api/register`, `/api/users`, `/api/boards`, `/api/columns`, `/api/cards`) & API unit tests in `/src/app/api/__tests__`.
 - **`/src/app/board/[id]`**: Main interactive Kanban Board page.
 - **`/src/app/dashboard`**: Workspace redirect & overview.
-- **`/src/app/login` & `/src/app/register`**: Authentication pages with instant demo seed trigger.
+- **`/src/app/login` & `/src/app/register`**: Authentication pages.
+- **`/tools`**: External database management CLI scripts (`tools/seed.ts` via `npm run db:seed` and `tools/clean.ts` via `npm run db:clean`).
 - **`/src/components/kanban`**: Components `KanbanBoard`, `KanbanColumn`, `KanbanCard` & unit tests in `__tests__`.
 - **`/src/components/modals`**: Modals for card details (`CardDetailModal`) and board creation (`CreateBoardModal`) & unit tests in `__tests__`.
 - **`/src/store/useKanbanStore.ts`**: Zustand store centralizing board state, card state, filters, and save status tracking & unit tests in `useKanbanStore.test.ts`.

@@ -13,6 +13,7 @@ vi.mock('@/lib/db', () => ({
 
 vi.mock('@/models/User', () => ({
   User: {
+    findOne: vi.fn(),
     find: vi.fn(),
   },
 }));
@@ -30,6 +31,8 @@ describe('API Route /api/users Unit Tests', () => {
 
   it('returns list of users sorted by name', async () => {
     vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
+    vi.mocked(User.findOne).mockResolvedValueOnce({ _id: 'u1' } as any);
+
     const mockUsers = [
       { _id: 'u1', name: 'Alice', email: 'alice@example.com' },
       { _id: 'u2', name: 'Bob', email: 'bob@example.com' },

@@ -12,6 +12,14 @@ export async function GET() {
 
     await connectToDatabase();
 
+    const dbUser = await User.findOne({
+      $or: [{ _id: session.user.id }, { email: session.user.email?.toLowerCase() }],
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ error: 'Unauthorized. User not found in database.' }, { status: 401 });
+    }
+
     const users = await User.find({}, 'name email avatarUrl').sort({ name: 1 });
 
     return NextResponse.json(users);

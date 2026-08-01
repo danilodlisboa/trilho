@@ -9,6 +9,14 @@ export function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Root path handling: redirect to /dashboard if logged in, otherwise to /login
+  if (pathname === '/') {
+    if (token) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
   const isProtectedPath = pathname.startsWith('/board') || pathname.startsWith('/dashboard');
 
   if (isProtectedPath && !token) {
@@ -25,5 +33,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/board/:path*', '/dashboard/:path*', '/login', '/register'],
+  matcher: ['/', '/board/:path*', '/dashboard/:path*', '/login', '/register'],
 };

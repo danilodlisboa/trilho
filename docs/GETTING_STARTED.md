@@ -77,11 +77,13 @@ npm run test:coverage
 
 See [`docs/TESTES.md`](TESTES.md) for full testing documentation and architecture.
 
-### Seeding Demo Data
-To test with pre-populated demo data:
+### Database CLI Tools (Seeding & Cleaning)
+To seed demo data or clear all collections in MongoDB, run the CLI tools located in `tools/`:
 
-1. Open [http://localhost:3000/login](http://localhost:3000/login)
-2. Click **"Create Account & Seed Demo Data"**
-3. Log in with:
-   - **Email:** `admin@trilho.com`
-   - **Password:** `password123`
+```bash
+# Seed initial demo datasets and admin account (admin@trilho.com / password123)
+npm run db:seed
+
+# Clear all collections from MongoDB
+npm run db:clean
+```

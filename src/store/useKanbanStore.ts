@@ -1,4 +1,15 @@
 import { create } from 'zustand';
+import { signOut } from 'next-auth/react';
+
+const checkUnauthorized = (res: Response) => {
+  if (res.status === 401 || res.status === 404) {
+    if (typeof window !== 'undefined') {
+      signOut({ callbackUrl: '/login' });
+    }
+    return true;
+  }
+  return false;
+};
 
 export interface IUserRef {
   _id: string;
@@ -123,6 +134,8 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
         if (boards.length > 0 && !get().activeBoard) {
           get().fetchBoardDetails(boards[0]._id);
         }
+      } else {
+        checkUnauthorized(res);
       }
     } catch (err) {
       console.error('Failed to fetch boards:', err);
@@ -135,6 +148,8 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
       if (res.ok) {
         const users = await res.json();
         set({ users });
+      } else {
+        checkUnauthorized(res);
       }
     } catch (err) {
       console.error('Failed to fetch users:', err);
@@ -155,6 +170,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
           saveStatusMessage: 'Saved to DB',
         });
       } else {
+        checkUnauthorized(res);
         set({ saveStatus: 'error', saveStatusMessage: 'Failed to load board' });
       }
     } catch (err) {
@@ -185,6 +201,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
           isCreateBoardModalOpen: false,
         });
       } else {
+        checkUnauthorized(res);
         set({ saveStatus: 'error', saveStatusMessage: 'Error creating board' });
       }
     } catch (err) {

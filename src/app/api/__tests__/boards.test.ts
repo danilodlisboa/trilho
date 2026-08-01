@@ -3,6 +3,7 @@ import { GET, POST } from '../boards/route';
 import { auth } from '@/auth';
 import { Board } from '@/models/Board';
 import { Column } from '@/models/Column';
+import { User } from '@/models/User';
 
 vi.mock('@/auth', () => ({
   auth: vi.fn(),
@@ -53,6 +54,8 @@ describe('API Route /api/boards Unit Tests', () => {
         user: { id: 'user_123', email: 'test@example.com' },
       } as any);
 
+      vi.mocked(User.findOne).mockResolvedValueOnce({ _id: 'user_123' } as any);
+
       const mockBoards = [
         { _id: 'b1', title: 'Board 1', ownerId: 'user_123', members: [] },
       ];
@@ -93,6 +96,8 @@ describe('API Route /api/boards Unit Tests', () => {
       vi.mocked(auth).mockResolvedValueOnce({
         user: { id: 'user_123', email: 'test@example.com' },
       } as any);
+
+      vi.mocked(User.findOne).mockResolvedValueOnce({ _id: 'user_123' } as any);
 
       const createdBoard = { _id: 'board_new', title: 'New Project', ownerId: 'user_123' };
       vi.mocked(Board.create).mockResolvedValueOnce(createdBoard as any);

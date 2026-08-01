@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Kanban, Lock, Mail, ArrowRight, Database, AlertCircle } from 'lucide-react';
+import { Kanban, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,8 +12,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSeeding, setIsSeeding] = useState(false);
-  const [seedSuccessMsg, setSeedSuccessMsg] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +26,7 @@ export default function LoginPage() {
       });
 
       if (res?.error) {
-        setError('Invalid email or password. Make sure to run Seed if this is your first access.');
+        setError('Invalid email or password.');
       } else {
         router.push('/dashboard');
         router.refresh();
@@ -37,25 +35,6 @@ export default function LoginPage() {
       setError('Error signing in.');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleSeed = async () => {
-    setIsSeeding(true);
-    setSeedSuccessMsg('');
-    setError('');
-    try {
-      const res = await fetch('/api/seed', { method: 'POST' });
-      if (res.ok) {
-        setSeedSuccessMsg('Database seeded successfully! Use email admin@trilho.com to log in.');
-        setEmail('admin@trilho.com');
-      } else {
-        setError('Error seeding database. Make sure MongoDB is running.');
-      }
-    } catch (err) {
-      setError('Failed to communicate with Seed API.');
-    } finally {
-      setIsSeeding(false);
     }
   };
 
@@ -75,18 +54,11 @@ export default function LoginPage() {
           <p className="text-xs text-slate-400 mt-1">Fullstack Kanban Project Management</p>
         </div>
 
-        {/* Banners */}
+        {/* Error Banner */}
         {error && (
           <div className="mb-4 p-3 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{error}</span>
-          </div>
-        )}
-
-        {seedSuccessMsg && (
-          <div className="mb-4 p-3 rounded-xl bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2">
-            <Database className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{seedSuccessMsg}</span>
           </div>
         )}
 
@@ -132,18 +104,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Demo Seed Button */}
-        <div className="mt-6 pt-6 border-t border-slate-800 flex flex-col items-center gap-3">
-          <button
-            type="button"
-            onClick={handleSeed}
-            disabled={isSeeding}
-            className="w-full bg-slate-800/80 hover:bg-slate-800 text-blue-400 font-semibold text-xs py-2.5 px-4 rounded-xl border border-blue-500/30 flex items-center justify-center gap-2 transition disabled:opacity-50"
-          >
-            <Database className="w-4 h-4 text-blue-400" />
-            <span>{isSeeding ? 'Seeding Database...' : 'Create Account & Seed Demo Data'}</span>
-          </button>
-
+        {/* Footer Navigation */}
+        <div className="mt-6 pt-6 border-t border-slate-800 text-center">
           <p className="text-xs text-slate-400">
             Don't have an account?{' '}
             <Link href="/register" className="text-blue-400 font-semibold hover:underline">

@@ -46,9 +46,12 @@ trilho/
 │   ├── API.md                   # Detailed REST API endpoints documentation
 │   ├── TESTES.md                # Fullstack Vitest & React Testing Library guide
 │   └── GETTING_STARTED.md       # Installation & local environment guide
+├── tools/                       # Database management scripts (seed, clean)
+│   ├── seed.ts                  # Database seeder script
+│   └── clean.ts                 # Database cleaner script
 ├── src/
 │   ├── app/                     # Next.js App Router (Routes & Server API Routes)
-│   │   ├── api/                 # REST Endpoints (auth, boards, columns, cards, seed, users)
+│   │   ├── api/                 # REST Endpoints (auth, boards, columns, cards, users)
 │   │   ├── board/[id]/          # Main Kanban Board page
 │   │   ├── dashboard/           # Workspace redirect & overview
 │   │   ├── login/               # Authentication / Login page
@@ -117,14 +120,19 @@ Run the fullstack unit test suite (Vitest + React Testing Library):
 npm run test
 ```
 
-### 6. Seed Demo Data
+### 6. Database Seeding & Cleaning Tools
 
-To populate MongoDB with demo data and create the admin test account:
+Populate MongoDB with default demo data or reset collections using external CLI tools:
 
-- Click **"Create Account & Seed Demo Data"** on the login page, or
-- Send a `POST` request to `http://localhost:3000/api/seed`
+```bash
+# Seed default demo data (creates admin@trilho.com)
+npm run db:seed
 
-**Test Access Credentials:**
+# Clean all collections from the database
+npm run db:clean
+```
+
+**Default Credentials:**
 - **Email:** `admin@trilho.com`
 - **Password:** `password123`
 
