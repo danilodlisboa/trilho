@@ -15,19 +15,22 @@
 - **Database & ODM:** MongoDB v7+ via Mongoose v8.9
 - **Authentication:** Auth.js v5 (`@auth/nextjs`) + `bcryptjs`
 - **Drag-and-Drop:** `@hello-pangea/dnd` v18.0.1 (React 19 compatible)
+- **Testing Framework:** Vitest + React Testing Library + JSDOM
 
 ## 📂 Key Modules & Component Map
-- **`/src/app/api`**: REST Endpoints (`/api/register`, `/api/users`, `/api/boards`, `/api/columns`, `/api/cards`, `/api/seed`).
+- **`/src/app/api`**: REST Endpoints (`/api/register`, `/api/users`, `/api/boards`, `/api/columns`, `/api/cards`, `/api/seed`) & API unit tests in `/src/app/api/__tests__`.
 - **`/src/app/board/[id]`**: Main interactive Kanban Board page.
 - **`/src/app/dashboard`**: Workspace redirect & overview.
 - **`/src/app/login` & `/src/app/register`**: Authentication pages with instant demo seed trigger.
-- **`/src/components/kanban`**: Components `KanbanBoard`, `KanbanColumn`, `KanbanCard`.
-- **`/src/components/modals`**: Modals for card details (`CardDetailModal`) with checklist and assignee selector, and board creation (`CreateBoardModal`).
-- **`/src/store/useKanbanStore.ts`**: Zustand store centralizing board state, card state, filters, and save status tracking.
+- **`/src/components/kanban`**: Components `KanbanBoard`, `KanbanColumn`, `KanbanCard` & unit tests in `__tests__`.
+- **`/src/components/modals`**: Modals for card details (`CardDetailModal`) and board creation (`CreateBoardModal`) & unit tests in `__tests__`.
+- **`/src/store/useKanbanStore.ts`**: Zustand store centralizing board state, card state, filters, and save status tracking & unit tests in `useKanbanStore.test.ts`.
 - **`/src/lib/db.ts`**: Mongoose connection pooling for serverless environments.
+- **`/docs`**: Core project documentation (`ARCHITECTURE.md`, `DATABASE.md`, `AUTHENTICATION.md`, `API.md`, `TESTES.md`, `GETTING_STARTED.md`).
 
 ## 🔄 Repository Status
 - Fully functional app with default Dark Mode.
 - Fully localized in English (UI, API errors, schemas, seed data, and documentation).
+- Comprehensive fullstack unit testing suite with Vitest passing 100% cleanly.
 - Clean code free from mocked local absolute paths.
 - 100% generic icons without third-party trademark logos.

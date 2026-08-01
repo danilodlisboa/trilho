@@ -42,6 +42,12 @@ The active board state is held in client memory using **Zustand** (`src/store/us
 ### 3. Drag-and-Drop (`@hello-pangea/dnd`)
 Uses `@hello-pangea/dnd` for smooth drag-and-drop card movements between droppable containers.
 
+### 4. Fullstack Testing Infrastructure (Vitest + React Testing Library)
+Integrated testing layer covering both client and server domains:
+- **Client Side**: `vitest` + `@testing-library/react` + `jsdom` for testing React components and Zustand store logic.
+- **Server Side**: `vitest` + Next.js App Router API route handlers (`/api/register`, `/api/boards`) and Mongoose schema models.
+- For detailed testing architecture, see [`docs/TESTES.md`](TESTES.md).
+
 ---
 
 ## 🔄 Card Reordering Data Flow

@@ -59,8 +59,25 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🧪 5. Testing and Seeding Data
+## 🧪 5. Testing & Running Unit Tests
 
+### Automated Unit Tests (Vitest + React Testing Library)
+Run unit tests for components, Zustand store, Mongoose models, and Next.js 15 API routes:
+
+```bash
+# Run full unit test suite
+npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate code coverage report
+npm run test:coverage
+```
+
+See [`docs/TESTES.md`](TESTES.md) for full testing documentation and architecture.
+
+### Seeding Demo Data
 To test with pre-populated demo data:
 
 1. Open [http://localhost:3000/login](http://localhost:3000/login)

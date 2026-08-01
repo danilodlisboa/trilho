@@ -44,6 +44,7 @@ trilho/
 │   ├── DATABASE.md              # MongoDB Schemas & Mongoose relationships
 │   ├── AUTHENTICATION.md        # Auth.js v5 setup & Middleware guard
 │   ├── API.md                   # Detailed REST API endpoints documentation
+│   ├── TESTES.md                # Fullstack Vitest & React Testing Library guide
 │   └── GETTING_STARTED.md       # Installation & local environment guide
 ├── src/
 │   ├── app/                     # Next.js App Router (Routes & Server API Routes)
@@ -108,7 +109,15 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 5. Seed Demo Data
+### 5. Running Unit Tests
+
+Run the fullstack unit test suite (Vitest + React Testing Library):
+
+```bash
+npm run test
+```
+
+### 6. Seed Demo Data
 
 To populate MongoDB with demo data and create the admin test account:
 
@@ -129,4 +138,5 @@ For technical details, see the [`/docs`](./docs) folder:
 - 🗄️ [**Database Schemas (`docs/DATABASE.md`)**](./docs/DATABASE.md)
 - 🔐 [**Authentication & Security (`docs/AUTHENTICATION.md`)**](./docs/AUTHENTICATION.md)
 - 🌐 [**REST API Specification (`docs/API.md`)**](./docs/API.md)
+- 🧪 [**Fullstack Testing Suite (`docs/TESTES.md`)**](./docs/TESTES.md)
 - 🚀 [**Getting Started Guide (`docs/GETTING_STARTED.md`)**](./docs/GETTING_STARTED.md)

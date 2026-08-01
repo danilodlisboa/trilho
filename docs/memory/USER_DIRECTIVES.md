@@ -10,7 +10,7 @@ This document stores extra-code context, implicit business rules, design prefere
 - **100% English Language Standard:** Absolutely all user-facing UI text, API responses, seed datasets, database schemas, default column titles, priority levels, and technical documentation in `trilho` must be in English.
 
 ### 2. Environment Agnostic & Relative Paths
-- **Relative Paths Only:** Never use hardcoded absolute local paths in documentation or code (e.g. use `cd trilho` and `/.env.local`).
+- **Strict Relative Paths Requirement:** NEVER use hardcoded absolute local paths (such as `file:///c:...`, `c:/Users/...`, or `C:\Users\...`) in documentation, markdown files, memory modules, test suites, or source code. Always use clean, environment-agnostic relative paths (e.g., `docs/ARCHITECTURE.md`, `vitest.config.mts`, `./.env.local`).
 - **Generic Branding:** Use generic icons (`Kanban`) and brand name **Trilho**.
 
 ### 3. AI Agent Memory Protocol

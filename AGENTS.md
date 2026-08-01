@@ -15,7 +15,8 @@ At each session start, task initialization, or new turn, the agent **MUST** exec
    - Read recent changes history in [`docs/memory/CHANGELOG_MEMORY.md`](docs/memory/CHANGELOG_MEMORY.md).
 
 2. **Context Validation:**
-   - Ensure all code modifications adhere to business rules and constraints in `USER_DIRECTIVES.md`.
+   - Ensure all code modifications and documentation adhere strictly to business rules in `USER_DIRECTIVES.md`.
+   - **Relative Paths Rule:** NEVER write or commit absolute file paths (e.g. `file:///c:...`, `c:/Users/...`). Use clean relative paths everywhere.
 
 ---
 
