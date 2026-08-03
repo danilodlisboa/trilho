@@ -23,6 +23,7 @@ export default function CardDetailModal() {
     deleteCard,
     users,
     fetchUsers,
+    activeBoard,
   } = useKanbanStore();
 
   const [title, setTitle] = useState('');
@@ -219,7 +220,7 @@ export default function CardDetailModal() {
                 className="w-full bg-slate-900 border border-slate-800 rounded-lg p-1.5 text-xs text-slate-200 outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value="">Unassigned</option>
-                {users.map((u) => (
+                {(activeBoard?.members || users).map((u) => (
                   <option key={u._id} value={u._id}>
                     {u.name}
                   </option>

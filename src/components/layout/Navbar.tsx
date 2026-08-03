@@ -65,6 +65,15 @@ export default function Navbar() {
     }
   };
 
+  const isOwner = activeBoard && session?.user
+    ? (typeof activeBoard.ownerId === 'string'
+        ? activeBoard.ownerId === session.user.id
+        : (activeBoard.ownerId as any)?._id === session.user.id) ||
+      (activeBoard.members && activeBoard.members.some((m) => m.email === session.user.email && (activeBoard.ownerId === m._id || (activeBoard.ownerId as any)?._id === m._id)))
+    : false;
+
+  const boardMembers = activeBoard?.members || users;
+
   return (
     <header className="h-16 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-4 flex items-center justify-between gap-4 sticky top-0 z-30">
       {/* Left: Active Board Title Inline Edit */}
@@ -73,7 +82,7 @@ export default function Navbar() {
           <Kanban className="w-6 h-6" />
         </div>
         {activeBoard ? (
-          isEditingTitle ? (
+          isOwner && isEditingTitle ? (
             <div className="flex items-center gap-1">
               <input
                 type="text"
@@ -89,11 +98,16 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setIsEditingTitle(true)}>
-              <h2 className="text-lg font-bold text-white tracking-wide group-hover:text-blue-400 transition">
+            <div
+              className={`flex items-center gap-2 group ${isOwner ? 'cursor-pointer' : ''}`}
+              onClick={() => isOwner && setIsEditingTitle(true)}
+            >
+              <h2 className={`text-lg font-bold text-white tracking-wide ${isOwner ? 'group-hover:text-blue-400' : ''} transition`}>
                 {activeBoard.title}
               </h2>
-              <Edit2 className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-400 transition opacity-0 group-hover:opacity-100" />
+              {isOwner && (
+                <Edit2 className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-400 transition opacity-0 group-hover:opacity-100" />
+              )}
             </div>
           )
         ) : (
@@ -139,7 +153,7 @@ export default function Navbar() {
         </div>
 
         {/* Assignee Filter */}
-        {users.length > 0 && (
+        {boardMembers.length > 0 && (
           <div className="hidden md:flex items-center gap-1 bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-1">
             <select
               value={selectedAssignee}
@@ -149,7 +163,7 @@ export default function Navbar() {
               <option value="all" className="bg-slate-900 text-slate-200">
                 All Assignees
               </option>
-              {users.map((u) => (
+              {boardMembers.map((u) => (
                 <option key={u._id} value={u._id} className="bg-slate-900 text-slate-200">
                   {u.name}
                 </option>

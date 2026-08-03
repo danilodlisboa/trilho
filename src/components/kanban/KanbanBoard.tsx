@@ -47,31 +47,33 @@ export default function KanbanBoard() {
 
   // Filter cards based on Search Query, Priority, and Assignee
   const getFilteredCardsForColumn = (columnId: string) => {
-    return cards.filter((card) => {
-      if (card.columnId !== columnId) return false;
+    return cards
+      .filter((card) => {
+        if (card.columnId !== columnId) return false;
 
-      // Filter by search query
-      if (searchQuery.trim() !== '') {
-        const query = searchQuery.toLowerCase();
-        const matchesTitle = card.title.toLowerCase().includes(query);
-        const matchesDesc = card.description ? card.description.toLowerCase().includes(query) : false;
-        if (!matchesTitle && !matchesDesc) return false;
-      }
+        // Filter by search query
+        if (searchQuery.trim() !== '') {
+          const query = searchQuery.toLowerCase();
+          const matchesTitle = card.title.toLowerCase().includes(query);
+          const matchesDesc = card.description ? card.description.toLowerCase().includes(query) : false;
+          if (!matchesTitle && !matchesDesc) return false;
+        }
 
-      // Filter by priority
-      if (selectedPriority !== 'all' && card.priority !== selectedPriority) {
-        return false;
-      }
+        // Filter by priority
+        if (selectedPriority !== 'all' && card.priority !== selectedPriority) {
+          return false;
+        }
 
-      // Filter by assignee
-      if (selectedAssignee !== 'all') {
-        const assigneeIdStr =
-          typeof card.assigneeId === 'object' && card.assigneeId ? card.assigneeId._id : card.assigneeId;
-        if (assigneeIdStr !== selectedAssignee) return false;
-      }
+        // Filter by assignee
+        if (selectedAssignee !== 'all') {
+          const assigneeIdStr =
+            typeof card.assigneeId === 'object' && card.assigneeId ? card.assigneeId._id : card.assigneeId;
+          if (assigneeIdStr !== selectedAssignee) return false;
+        }
 
-      return true;
-    });
+        return true;
+      })
+      .sort((a, b) => a.order - b.order);
   };
 
   if (!activeBoard) {

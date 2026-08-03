@@ -37,6 +37,14 @@ export interface ICardData {
   order: number;
 }
 
+export interface IBoardInvitation {
+  id: string;
+  email: string;
+  status: 'pending' | 'accepted' | 'declined';
+  invitedBy?: string;
+  createdAt: string;
+}
+
 export interface IColumnData {
   _id: string;
   boardId: string;
@@ -50,6 +58,7 @@ export interface IBoardData {
   description?: string;
   ownerId: string;
   members: IUserRef[];
+  invitations?: IBoardInvitation[];
 }
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
@@ -57,6 +66,7 @@ export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 interface KanbanStoreState {
   // Data State
   boards: IBoardData[];
+  pendingInvitations: IBoardData[];
   activeBoard: IBoardData | null;
   columns: IColumnData[];
   cards: ICardData[];
@@ -80,11 +90,17 @@ interface KanbanStoreState {
 
   // Async API & State Actions
   fetchBoards: () => Promise<void>;
+  fetchPendingInvitations: () => Promise<void>;
   fetchBoardDetails: (boardId: string) => Promise<void>;
   fetchUsers: () => Promise<void>;
   createBoard: (title: string, description: string) => Promise<void>;
   updateBoardTitle: (boardId: string, title: string) => Promise<void>;
   deleteBoard: (boardId: string) => Promise<void>;
+
+  inviteMember: (boardId: string, email: string) => Promise<{ ok: boolean; error?: string }>;
+  acceptInvitation: (boardId: string) => Promise<void>;
+  declineInvitation: (boardId: string) => Promise<void>;
+  removeMemberOrInvite: (boardId: string, identifier: string) => Promise<void>;
 
   createColumn: (title: string) => Promise<void>;
   renameColumn: (columnId: string, title: string) => Promise<void>;
@@ -106,6 +122,7 @@ interface KanbanStoreState {
 
 export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
   boards: [],
+  pendingInvitations: [],
   activeBoard: null,
   columns: [],
   cards: [],
@@ -139,6 +156,112 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
       }
     } catch (err) {
       console.error('Failed to fetch boards:', err);
+    }
+  },
+
+  fetchPendingInvitations: async () => {
+    try {
+      const res = await fetch('/api/boards/invitations/pending');
+      if (res.ok) {
+        const pendingInvitations = await res.json();
+        set({ pendingInvitations });
+      }
+    } catch (err) {
+      console.error('Failed to fetch pending invitations:', err);
+    }
+  },
+
+  inviteMember: async (boardId: string, email: string) => {
+    try {
+      set({ saveStatus: 'saving', saveStatusMessage: 'Sending invitation...' });
+      const res = await fetch(`/api/boards/${boardId}/invitations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        set({
+          activeBoard: data,
+          saveStatus: 'saved',
+          saveStatusMessage: 'Invitation sent',
+        });
+        return { ok: true };
+      } else {
+        set({ saveStatus: 'error', saveStatusMessage: data.error || 'Failed to send invitation' });
+        return { ok: false, error: data.error || 'Failed to send invitation' };
+      }
+    } catch (err: any) {
+      console.error('Error inviting member:', err);
+      set({ saveStatus: 'error', saveStatusMessage: 'Connection error' });
+      return { ok: false, error: 'Connection error' };
+    }
+  },
+
+  acceptInvitation: async (boardId: string) => {
+    try {
+      set({ saveStatus: 'saving', saveStatusMessage: 'Accepting invitation...' });
+      const res = await fetch(`/api/boards/${boardId}/invitations/accept`, {
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        await get().fetchBoards();
+        await get().fetchPendingInvitations();
+        await get().fetchBoardDetails(boardId);
+        set({ saveStatus: 'saved', saveStatusMessage: 'Joined board' });
+      } else {
+        const data = await res.json();
+        set({ saveStatus: 'error', saveStatusMessage: data.error || 'Failed to accept invitation' });
+      }
+    } catch (err) {
+      console.error('Error accepting invitation:', err);
+      set({ saveStatus: 'error', saveStatusMessage: 'Connection error' });
+    }
+  },
+
+  declineInvitation: async (boardId: string) => {
+    try {
+      set({ saveStatus: 'saving', saveStatusMessage: 'Declining invitation...' });
+      const res = await fetch(`/api/boards/${boardId}/invitations/decline`, {
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        await get().fetchPendingInvitations();
+        set({ saveStatus: 'saved', saveStatusMessage: 'Invitation declined' });
+      } else {
+        const data = await res.json();
+        set({ saveStatus: 'error', saveStatusMessage: data.error || 'Failed to decline invitation' });
+      }
+    } catch (err) {
+      console.error('Error declining invitation:', err);
+      set({ saveStatus: 'error', saveStatusMessage: 'Connection error' });
+    }
+  },
+
+  removeMemberOrInvite: async (boardId: string, identifier: string) => {
+    try {
+      set({ saveStatus: 'saving', saveStatusMessage: 'Updating members...' });
+      const res = await fetch(`/api/boards/${boardId}/members/${encodeURIComponent(identifier)}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        const updatedBoard = await res.json();
+        set({
+          activeBoard: updatedBoard,
+          saveStatus: 'saved',
+          saveStatusMessage: 'Member removed',
+        });
+      } else {
+        const data = await res.json();
+        set({ saveStatus: 'error', saveStatusMessage: data.error || 'Failed to remove member' });
+      }
+    } catch (err) {
+      console.error('Error removing member:', err);
+      set({ saveStatus: 'error', saveStatusMessage: 'Connection error' });
     }
   },
 
@@ -454,7 +577,8 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
       });
     }
 
-    set({ cards: [...allCards], saveStatus: 'saving', saveStatusMessage: 'Saving reorder...' });
+    const updatedAllCards = [...allCards].sort((a, b) => a.order - b.order);
+    set({ cards: updatedAllCards, saveStatus: 'saving', saveStatusMessage: 'Saving reorder...' });
 
     // Prepare batch update payload for API
     const updatedCardsToSync = allCards.map((c) => ({

@@ -4,6 +4,15 @@ import { connectToDatabase } from '@/lib/db';
 import { Board } from '@/models/Board';
 import { Column } from '@/models/Column';
 import { Card } from '@/models/Card';
+import { User } from '@/models/User';
+
+async function getAuthenticatedUser(session: any) {
+  if (!session?.user?.id && !session?.user?.email) return null;
+  const dbUser = await User.findOne({
+    $or: [{ _id: session.user.id }, { email: session.user.email?.toLowerCase() }],
+  });
+  return dbUser;
+}
 
 export async function GET(req: Request, { params }: { params: Promise<{ boardId: string }> }) {
   try {
@@ -16,9 +25,22 @@ export async function GET(req: Request, { params }: { params: Promise<{ boardId:
 
     await connectToDatabase();
 
+    const dbUser = await getAuthenticatedUser(session);
+    if (!dbUser) {
+      return NextResponse.json({ error: 'Unauthorized. User not found in database.' }, { status: 401 });
+    }
+    const userId = dbUser._id.toString();
+
     const board = await Board.findById(boardId).populate('members', 'name email avatarUrl');
     if (!board) {
       return NextResponse.json({ error: 'Board not found.' }, { status: 404 });
+    }
+
+    const isOwner = board.ownerId.toString() === userId;
+    const isMember = board.members.some((m: any) => (m._id ? m._id.toString() : m.toString()) === userId);
+
+    if (!isOwner && !isMember) {
+      return NextResponse.json({ error: 'Access denied. You are not a member of this board.' }, { status: 403 });
     }
 
     const columns = await Column.find({ boardId }).sort({ order: 1 });
@@ -49,16 +71,31 @@ export async function PUT(req: Request, { params }: { params: Promise<{ boardId:
 
     await connectToDatabase();
 
+    const dbUser = await getAuthenticatedUser(session);
+    if (!dbUser) {
+      return NextResponse.json({ error: 'Unauthorized. User not found in database.' }, { status: 401 });
+    }
+    const userId = dbUser._id.toString();
+
+    const board = await Board.findById(boardId);
+    if (!board) {
+      return NextResponse.json({ error: 'Board not found.' }, { status: 404 });
+    }
+
+    if (board.ownerId.toString() !== userId) {
+      return NextResponse.json({ error: 'Only board owner can edit this board.' }, { status: 403 });
+    }
+
     const updateData: any = {};
     if (title) updateData.title = title.trim();
     if (description !== undefined) updateData.description = description;
 
-    const board = await Board.findByIdAndUpdate(boardId, updateData, { new: true }).populate(
+    const updatedBoard = await Board.findByIdAndUpdate(boardId, updateData, { new: true }).populate(
       'members',
       'name email avatarUrl'
     );
 
-    return NextResponse.json(board);
+    return NextResponse.json(updatedBoard);
   } catch (error: any) {
     console.error('Error updating board:', error);
     return NextResponse.json({ error: error.message || 'Error updating board.' }, { status: 500 });
@@ -75,6 +112,21 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ board
     const { boardId } = await params;
 
     await connectToDatabase();
+
+    const dbUser = await getAuthenticatedUser(session);
+    if (!dbUser) {
+      return NextResponse.json({ error: 'Unauthorized. User not found in database.' }, { status: 401 });
+    }
+    const userId = dbUser._id.toString();
+
+    const board = await Board.findById(boardId);
+    if (!board) {
+      return NextResponse.json({ error: 'Board not found.' }, { status: 404 });
+    }
+
+    if (board.ownerId.toString() !== userId) {
+      return NextResponse.json({ error: 'Only board owner can delete this board.' }, { status: 403 });
+    }
 
     await Card.deleteMany({ boardId });
     await Column.deleteMany({ boardId });

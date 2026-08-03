@@ -4,6 +4,28 @@ This document records the chronological history of features, bug fixes, architec
 
 ---
 
+## 📅 2026-08-03
+
+### 🔐 Ported Business Rules, Security Authorization & Invitation System from `trilho_python`
+- **Strict Board Owner Authorization**: Enforced owner identity check on `GET /api/boards/[boardId]` (403 for non-members), `PUT /api/boards/[boardId]` (403 for non-owners), and `DELETE /api/boards/[boardId]` (403 for non-owners, with cascade column and card deletion).
+- **Board Invitations System**:
+  - Updated `Board` schema model (`src/models/Board.ts`) to store `invitations: [BoardInvitationSchema]`.
+  - Added email invitation endpoint `POST /api/boards/[boardId]/invitations` (owner-only, validating self-invites, existing members, and duplicate pending invites).
+  - Added pending invitations query endpoint `GET /api/boards/invitations/pending`.
+  - Added accept invitation endpoint `POST /api/boards/[boardId]/invitations/accept` and decline invitation endpoint `POST /api/boards/[boardId]/invitations/decline`.
+  - Added member removal & invitation cancelation endpoint `DELETE /api/boards/[boardId]/members/[identifier]` (owner-only, protecting board owner).
+- **Strict Assignee Validation**: Enforced that card assignees on `POST /api/cards` and `PUT /api/cards` must be accepted board members (`400 Bad Request` if unconfirmed user is assigned).
+- **UI & State Integrations**:
+  - Updated `useKanbanStore.ts` with `pendingInvitations` state, `fetchPendingInvitations()`, `inviteMember()`, `acceptInvitation()`, `declineInvitation()`, and `removeMemberOrInvite()`.
+  - Updated `Navbar.tsx` to restrict inline board title editing to board owner and filter assignee dropdown to active board members.
+  - Updated `Sidebar.tsx` to display pending invitation badges with Accept/Decline action buttons, restrict board deletion to board owner, and provide an inline email invitation form and member removal list for board owners.
+  - Updated `CardDetailModal.tsx` to restrict assignee selection options to accepted board members.
+- **Unit Test Coverage**: Updated `boardId.test.ts` and `cards.test.ts` to test owner authorization checks and strict member assignee validation.
+- **🐛 Fix Vertical Card Reordering State Reversion**:
+  - Added `.sort((a, b) => a.order - b.order)` to `getFilteredCardsForColumn` in `KanbanBoard.tsx`.
+  - Updated `moveCardOptimistic` in `useKanbanStore.ts` to re-sort `allCards` by `order` when updating store state, preventing optimistic UI reorder reversion.
+  - Added unit test case for same-column vertical card reordering in `useKanbanStore.test.ts`.
+
 ## 📅 2026-08-01
 
 ### 🧪 Fullstack Unit Testing Suite Implementation (Vitest + React Testing Library)

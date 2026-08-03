@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { connectToDatabase } from '@/lib/db';
 import { Card } from '@/models/Card';
+import { Board } from '@/models/Board';
+
+async function isValidAssignee(boardId: string, assigneeId: string): Promise<boolean> {
+  const board = await Board.findById(boardId);
+  if (!board) return false;
+  const isOwner = board.ownerId.toString() === assigneeId;
+  const isMember = board.members.some((m) => m.toString() === assigneeId);
+  return isOwner || isMember;
+}
 
 export async function POST(req: Request) {
   try {
@@ -18,6 +27,13 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
+    if (assigneeId && assigneeId !== 'none') {
+      const valid = await isValidAssignee(boardId, assigneeId);
+      if (!valid) {
+        return NextResponse.json({ error: 'Assignee must be an accepted board member.' }, { status: 400 });
+      }
+    }
+
     const cardCount = await Card.countDocuments({ columnId });
 
     const newCard = await Card.create({
@@ -27,7 +43,7 @@ export async function POST(req: Request) {
       description: description || '',
       priority: priority || 'medium',
       dueDate: dueDate ? new Date(dueDate) : null,
-      assigneeId: assigneeId || null,
+      assigneeId: assigneeId && assigneeId !== 'none' ? assigneeId : null,
       checklist: [],
       order: cardCount,
     });
@@ -56,12 +72,27 @@ export async function PUT(req: Request) {
 
     await connectToDatabase();
 
+    const existingCard = await Card.findById(cardId);
+    if (!existingCard) {
+      return NextResponse.json({ error: 'Card not found.' }, { status: 404 });
+    }
+
+    if (assigneeId !== undefined && assigneeId !== null && assigneeId !== '' && assigneeId !== 'none') {
+      const targetBoardId = existingCard.boardId.toString();
+      const valid = await isValidAssignee(targetBoardId, assigneeId);
+      if (!valid) {
+        return NextResponse.json({ error: 'Assignee must be an accepted board member.' }, { status: 400 });
+      }
+    }
+
     const updateData: any = {};
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (priority !== undefined) updateData.priority = priority;
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
-    if (assigneeId !== undefined) updateData.assigneeId = assigneeId || null;
+    if (assigneeId !== undefined) {
+      updateData.assigneeId = assigneeId && assigneeId !== 'none' ? assigneeId : null;
+    }
     if (checklist !== undefined) updateData.checklist = checklist;
     if (columnId !== undefined) updateData.columnId = columnId;
     if (order !== undefined) updateData.order = order;

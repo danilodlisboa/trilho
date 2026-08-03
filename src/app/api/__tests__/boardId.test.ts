@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { Board } from '@/models/Board';
 import { Column } from '@/models/Column';
 import { Card } from '@/models/Card';
+import { User } from '@/models/User';
 
 vi.mock('@/auth', () => ({
   auth: vi.fn(),
@@ -11,6 +12,12 @@ vi.mock('@/auth', () => ({
 
 vi.mock('@/lib/db', () => ({
   connectToDatabase: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock('@/models/User', () => ({
+  User: {
+    findOne: vi.fn(),
+  },
 }));
 
 vi.mock('@/models/Board', () => ({
@@ -53,6 +60,7 @@ describe('API Route /api/boards/[boardId] Unit Tests', () => {
 
     it('returns 404 when board not found', async () => {
       vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
+      vi.mocked(User.findOne).mockResolvedValueOnce({ _id: 'u1' } as any);
       vi.mocked(Board.findById).mockReturnValueOnce({
         populate: vi.fn().mockResolvedValueOnce(null),
       } as any);
@@ -62,9 +70,24 @@ describe('API Route /api/boards/[boardId] Unit Tests', () => {
       expect(res.status).toBe(404);
     });
 
-    it('returns board details with columns and cards', async () => {
+    it('returns 403 when user is neither owner nor member', async () => {
       vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
-      const mockBoard = { _id: 'board_123', title: 'Board 1' };
+      vi.mocked(User.findOne).mockResolvedValueOnce({ _id: 'u1' } as any);
+      const mockBoard = { _id: 'board_123', ownerId: 'u2', members: [] };
+
+      vi.mocked(Board.findById).mockReturnValueOnce({
+        populate: vi.fn().mockResolvedValueOnce(mockBoard),
+      } as any);
+
+      const req = new Request('http://localhost/api/boards/board_123');
+      const res = await GET(req, { params });
+      expect(res.status).toBe(403);
+    });
+
+    it('returns board details with columns and cards for board owner', async () => {
+      vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
+      vi.mocked(User.findOne).mockResolvedValueOnce({ _id: 'u1' } as any);
+      const mockBoard = { _id: 'board_123', title: 'Board 1', ownerId: 'u1', members: [] };
       const mockColumns = [{ _id: 'col_1', title: 'To Do' }];
       const mockCards = [{ _id: 'card_1', title: 'Task 1' }];
 
@@ -94,8 +117,24 @@ describe('API Route /api/boards/[boardId] Unit Tests', () => {
   });
 
   describe('PUT /api/boards/[boardId]', () => {
-    it('updates board title and description', async () => {
+    it('returns 403 when non-owner attempts to edit board', async () => {
       vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
+      vi.mocked(User.findOne).mockResolvedValueOnce({ _id: 'u1' } as any);
+      vi.mocked(Board.findById).mockResolvedValueOnce({ _id: 'board_123', ownerId: 'u2' } as any);
+
+      const req = new Request('http://localhost/api/boards/board_123', {
+        method: 'PUT',
+        body: JSON.stringify({ title: 'Updated Title' }),
+      });
+
+      const res = await PUT(req, { params });
+      expect(res.status).toBe(403);
+    });
+
+    it('updates board title and description when executed by owner', async () => {
+      vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
+      vi.mocked(User.findOne).mockResolvedValueOnce({ _id: 'u1' } as any);
+      vi.mocked(Board.findById).mockResolvedValueOnce({ _id: 'board_123', ownerId: 'u1' } as any);
       const updatedBoard = { _id: 'board_123', title: 'Updated Title', description: 'New Desc' };
 
       vi.mocked(Board.findByIdAndUpdate).mockReturnValueOnce({
@@ -116,8 +155,23 @@ describe('API Route /api/boards/[boardId] Unit Tests', () => {
   });
 
   describe('DELETE /api/boards/[boardId]', () => {
-    it('deletes board and associated columns and cards', async () => {
+    it('returns 403 when non-owner attempts to delete board', async () => {
       vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
+      vi.mocked(User.findOne).mockResolvedValueOnce({ _id: 'u1' } as any);
+      vi.mocked(Board.findById).mockResolvedValueOnce({ _id: 'board_123', ownerId: 'u2' } as any);
+
+      const req = new Request('http://localhost/api/boards/board_123', {
+        method: 'DELETE',
+      });
+
+      const res = await DELETE(req, { params });
+      expect(res.status).toBe(403);
+    });
+
+    it('deletes board and associated columns and cards when executed by owner', async () => {
+      vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
+      vi.mocked(User.findOne).mockResolvedValueOnce({ _id: 'u1' } as any);
+      vi.mocked(Board.findById).mockResolvedValueOnce({ _id: 'board_123', ownerId: 'u1' } as any);
 
       const req = new Request('http://localhost/api/boards/board_123', {
         method: 'DELETE',

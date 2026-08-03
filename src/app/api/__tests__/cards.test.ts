@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { POST, PUT, DELETE } from '../cards/route';
 import { auth } from '@/auth';
 import { Card } from '@/models/Card';
+import { Board } from '@/models/Board';
 
 vi.mock('@/auth', () => ({
   auth: vi.fn(),
@@ -9,6 +10,12 @@ vi.mock('@/auth', () => ({
 
 vi.mock('@/lib/db', () => ({
   connectToDatabase: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock('@/models/Board', () => ({
+  Board: {
+    findById: vi.fn(),
+  },
 }));
 
 vi.mock('@/models/Card', () => ({
@@ -38,6 +45,21 @@ describe('API Route /api/cards Unit Tests', () => {
       expect(res.status).toBe(400);
     });
 
+    it('returns 400 when assignee is not an accepted board member', async () => {
+      vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
+      vi.mocked(Board.findById).mockResolvedValueOnce({ ownerId: 'u1', members: [] } as any);
+
+      const req = new Request('http://localhost/api/cards', {
+        method: 'POST',
+        body: JSON.stringify({ boardId: 'b1', columnId: 'c1', title: 'New Task', assigneeId: 'unconfirmed_user' }),
+      });
+
+      const res = await POST(req);
+      const data = await res.json();
+      expect(res.status).toBe(400);
+      expect(data.error).toBe('Assignee must be an accepted board member.');
+    });
+
     it('creates card successfully', async () => {
       vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
       vi.mocked(Card.countDocuments).mockResolvedValueOnce(0);
@@ -64,8 +86,10 @@ describe('API Route /api/cards Unit Tests', () => {
   describe('PUT /api/cards', () => {
     it('updates card properties', async () => {
       vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'u1' } } as any);
+      const existingCard = { _id: 'card_1', boardId: 'b1', title: 'Task 1' };
       const updatedCard = { _id: 'card_1', title: 'Updated Title', priority: 'low' };
 
+      vi.mocked(Card.findById).mockResolvedValueOnce(existingCard as any);
       vi.mocked(Card.findByIdAndUpdate).mockReturnValueOnce({
         populate: vi.fn().mockResolvedValueOnce(updatedCard),
       } as any);

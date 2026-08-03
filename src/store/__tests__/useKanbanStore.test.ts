@@ -190,4 +190,24 @@ describe('useKanbanStore Unit Tests', () => {
     expect(card1?.columnId).toBe('col2');
     expect(card1?.order).toBe(1);
   });
+
+  it('should handle optimistic vertical card reordering within the same column', () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true });
+
+    useKanbanStore.setState({
+      cards: [
+        { _id: 'card1', boardId: 'b1', columnId: 'col1', title: 'Task 1', priority: 'medium', checklist: [], order: 0 },
+        { _id: 'card2', boardId: 'b1', columnId: 'col1', title: 'Task 2', priority: 'high', checklist: [], order: 1 },
+      ],
+    });
+
+    const { moveCardOptimistic } = useKanbanStore.getState();
+    moveCardOptimistic('card2', 'col1', 'col1', 1, 0);
+
+    const updatedCards = useKanbanStore.getState().cards;
+    expect(updatedCards[0]._id).toBe('card2');
+    expect(updatedCards[0].order).toBe(0);
+    expect(updatedCards[1]._id).toBe('card1');
+    expect(updatedCards[1].order).toBe(1);
+  });
 });
