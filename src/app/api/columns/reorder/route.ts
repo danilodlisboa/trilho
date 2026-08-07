@@ -19,6 +19,8 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
+    const userId = session.user?.id;
+
     // Verify first column board membership to authorize reorder batch
     const firstCol = await Column.findById(columns[0].id);
     if (!firstCol) {
@@ -30,8 +32,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Board not found.' }, { status: 404 });
     }
 
-    const isOwner = board.ownerId.toString() === session.user.id;
-    const isMember = board.members.some((m) => m.toString() === session.user.id);
+    const isOwner = board.ownerId.toString() === userId;
+    const isMember = board.members.some((m) => m.toString() === userId);
     if (!isOwner && !isMember) {
       return NextResponse.json({ error: 'Forbidden. You are not a member of this board.' }, { status: 403 });
     }
