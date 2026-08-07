@@ -16,7 +16,7 @@ At each session start, task initialization, or new turn, the agent **MUST** exec
 
 2. **Context Validation:**
    - Ensure all code modifications and documentation adhere strictly to business rules in `USER_DIRECTIVES.md`.
-   - **Relative Paths Rule:** NEVER write or commit absolute file paths (e.g. `file:///c:...`, `c:/Users/...`). Use clean relative paths everywhere.
+   - **Relative Paths Rule:** NEVER write or commit absolute file paths in documentation, code, or memory logs. Always use clean relative paths.
 
 ---
 

@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Root path handling: redirect to /dashboard if logged in, otherwise to /login
+  // Root path handling: redirect to /dashboard if token cookie exists, otherwise to /login
   if (pathname === '/') {
     if (token) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
@@ -25,13 +25,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if ((pathname === '/login' || pathname === '/register') && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/', '/board/:path*', '/dashboard/:path*', '/login', '/register'],
+  matcher: ['/', '/board/:path*', '/dashboard/:path*'],
 };

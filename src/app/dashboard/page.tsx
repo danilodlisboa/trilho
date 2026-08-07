@@ -14,11 +14,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.replace('/login');
+      window.location.href = '/login';
     } else if (status === 'authenticated') {
       fetchBoards();
     }
-  }, [status, fetchBoards, router]);
+  }, [status, fetchBoards]);
 
   useEffect(() => {
     if (status === 'authenticated' && !isLoadingBoards && !fetchError && boards.length > 0) {

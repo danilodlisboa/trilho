@@ -10,7 +10,7 @@ This document stores extra-code context, implicit business rules, design prefere
 - **100% English Language Standard:** Absolutely all user-facing UI text, API responses, seed datasets, database schemas, default column titles, priority levels, and technical documentation in `trilho` must be in English.
 
 ### 2. Environment Agnostic & Relative Paths
-- **Strict Relative Paths Requirement:** NEVER use hardcoded absolute local paths (such as `file:///c:...`, `c:/Users/...`, or `C:\Users\...`) in documentation, markdown files, memory modules, test suites, or source code. Always use clean, environment-agnostic relative paths (e.g., `docs/ARCHITECTURE.md`, `vitest.config.mts`, `./.env.local`).
+- **Strict Relative Paths Requirement:** NEVER use absolute file paths in documentation, comments, markdown files, or memory logs. ALWAYS use clean relative paths.
 - **Generic Branding:** Use generic icons (`Kanban`) and brand name **Trilho**.
 
 ### 3. AI Agent Memory Protocol
@@ -18,7 +18,7 @@ This document stores extra-code context, implicit business rules, design prefere
 - **Continuous Updates:** Update `CHANGELOG_MEMORY.md`, `PROJECT_STATE.md`, and `USER_DIRECTIVES.md` upon completing work.
 
 ### 4. Design & UX Standards
-- **Default Dark Mode:** Sleek dark interface with Slate/Blue/Indigo palette and glassmorphism accents.
+- **Visual Styling:** Sleek interface with Slate/Blue/Indigo palette and glassmorphism accents.
 - **Optimistic UI Updates:** Zustand state updates immediately on drag-and-drop or card edits without waiting for server network responses.
 
 ### 5. Board Authorization & Member Management

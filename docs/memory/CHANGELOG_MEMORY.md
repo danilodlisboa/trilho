@@ -6,9 +6,20 @@ This document records the chronological history of features, bug fixes, architec
 
 ## 📅 2026-08-07
 
+### 📏 Enforce Strict Relative Paths Rule (`AGENTS.md`, `docs/memory/USER_DIRECTIVES.md`)
+- **Mandatory Relative Paths Rule**: Registered a strict project directive prohibiting absolute file paths in documentation, comments, markdown files, and memory logs. All path references must use clean relative paths.
+
+### 🎨 Responsive Navbar Layout for Mobile Screens (`src/components/layout/Navbar.tsx`)
+- **Prevented Mobile Overflow**: Applied responsive flex bounds (`overflow-hidden`, `min-w-0`, `shrink-0`, `max-w-[45%]`) to prevent header controls from clipping or overflowing on narrow viewports (e.g., Pixel 10 mobile size 412px).
+- **User Profile Dropdown Visibility**: Removed `overflow-hidden` container clipping from `<header>` element and added backdrop overlay so clicking the user profile picture opens the user options modal cleanly on all screen sizes.
+
+### 🐛 Fix Infinite Redirection Loop ("Redirecting to login...") (`src/middleware.ts`, `src/app/dashboard/page.tsx`, `src/app/board/[id]/page.tsx`)
+- **Resolved Middleware Loop**: Removed aggressive cookie check in `middleware.ts` that bounced unauthenticated sessions trying to access `/login` back to `/dashboard`, breaking the infinite redirect loop.
+- **Clean Hard Navigation**: Updated `DashboardPage` and `BoardPage` to use `window.location.href = '/login'` when `status === 'unauthenticated'`, guaranteeing a clean reset to the login page without getting stuck.
+
 ### 🏷️ UI Text & Branding Adjustments (`src/components/layout/Sidebar.tsx`, `src/components/layout/Navbar.tsx`, `src/store/useKanbanStore.ts`)
-- **Removed NoSQL Badge**: Removed the `'NoSQL'` badge pill from the Trilho title in [Sidebar.tsx](file:///c:/Users/Danilo/code/trilho/src/components/layout/Sidebar.tsx).
-- **Simplified Save Status Indicator**: Updated the save status indicator text from `'Saved to DB'` to strictly `'Saved'` across [Navbar.tsx](file:///c:/Users/Danilo/code/trilho/src/components/layout/Navbar.tsx) and all Zustand store actions in [useKanbanStore.ts](file:///c:/Users/Danilo/code/trilho/src/store/useKanbanStore.ts).
+- **Removed NoSQL Badge**: Removed the `'NoSQL'` badge pill from the Trilho title in `src/components/layout/Sidebar.tsx`.
+- **Removed Dark Mode Toggle**: Removed `isDarkMode` state, `toggleTheme` function, and theme toggle button from `src/components/layout/Navbar.tsx`.
 
 ### 📱 Responsive Off-Canvas Mobile Drawer & Header Expand Toggle (`src/components/layout/Sidebar.tsx`, `src/components/layout/Navbar.tsx`)
 - **Off-Canvas Mobile Drawer (`-translate-x-full md:translate-x-0`)**: Configured sidebar to hide completely off-screen on small screens (`< md`) when contracted, with a smooth slide-in transition over a semi-transparent backdrop overlay when expanded.

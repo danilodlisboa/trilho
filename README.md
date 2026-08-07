@@ -25,7 +25,7 @@
   - **Interactive Checklist** with progress percentage (`2/5 completed`).
   - Team member assignment.
 - 🔍 **Real-Time Filters & Search**: Search cards by keyword and filter by priority or assignee.
-- 🌓 **Modern Dark Mode**: Dark mode default with sleek aesthetics and glassmorphism.
+- 🎨 **Modern Interface**: Sleek aesthetics and glassmorphism styling.
 - 🌱 **Instant Seed Data**: Seed route to populate MongoDB with demo boards, columns, and tasks for immediate testing.
 
 ---

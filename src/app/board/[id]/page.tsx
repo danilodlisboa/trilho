@@ -19,7 +19,7 @@ export default function BoardPage({ params }: { params: Promise<{ id: string }> 
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.replace('/login');
+      window.location.href = '/login';
     } else if (status === 'authenticated') {
       fetchBoards();
       fetchUsers();
@@ -27,7 +27,7 @@ export default function BoardPage({ params }: { params: Promise<{ id: string }> 
         fetchBoardDetails(id);
       }
     }
-  }, [id, status, fetchBoards, fetchBoardDetails, fetchUsers, router]);
+  }, [id, status, fetchBoards, fetchBoardDetails, fetchUsers]);
 
   if (status === 'loading' || status === 'unauthenticated') {
     return (

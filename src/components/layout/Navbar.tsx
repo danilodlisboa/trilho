@@ -11,8 +11,6 @@ import {
   Loader2,
   AlertCircle,
   LogOut,
-  Sun,
-  Moon,
   Kanban,
   Edit2,
   Check,
@@ -39,7 +37,6 @@ export default function Navbar() {
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [boardTitleInput, setBoardTitleInput] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(true);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -55,17 +52,6 @@ export default function Navbar() {
     setIsEditingTitle(false);
   };
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    if (document.documentElement.classList.contains('light')) {
-      document.documentElement.classList.remove('light');
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.classList.add('light');
-    }
-  };
-
   const userId = session?.user?.id;
   const userEmail = session?.user?.email;
 
@@ -79,24 +65,25 @@ export default function Navbar() {
   const boardMembers = activeBoard?.members || users;
 
   return (
-    <header className="h-16 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-4 flex items-center justify-between gap-4 sticky top-0 z-30">
+    <header className="h-16 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-2.5 sm:px-4 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-30 w-full">
       {/* Left: Sidebar Toggle Button & Active Board Title */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 max-w-[45%] sm:max-w-none">
         <button
           type="button"
           onClick={toggleSidebarContracted}
-          className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition flex items-center justify-center"
+          className="p-1.5 sm:p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition flex items-center justify-center shrink-0"
           title={isSidebarContracted ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <PanelLeft className="w-5 h-5 text-slate-300" />
         </button>
 
-        <div className="flex items-center gap-2 text-blue-500 font-bold text-lg">
+        <div className="hidden sm:flex items-center gap-2 text-blue-500 font-bold text-lg shrink-0">
           <Kanban className="w-6 h-6" />
         </div>
+
         {activeBoard ? (
           isOwner && isEditingTitle ? (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 min-w-0">
               <input
                 type="text"
                 value={boardTitleInput}
@@ -104,46 +91,46 @@ export default function Navbar() {
                 onBlur={handleTitleSubmit}
                 onKeyDown={(e) => e.key === 'Enter' && handleTitleSubmit()}
                 autoFocus
-                className="bg-slate-800 text-white font-bold text-lg px-2 py-1 rounded border border-blue-500 outline-none"
+                className="bg-slate-800 text-white font-bold text-sm sm:text-lg px-2 py-0.5 rounded border border-blue-500 outline-none w-24 sm:w-auto"
               />
-              <button onClick={handleTitleSubmit} className="p-1 text-emerald-400 hover:bg-slate-800 rounded">
-                <Check className="w-5 h-5" />
+              <button onClick={handleTitleSubmit} className="p-1 text-emerald-400 hover:bg-slate-800 rounded shrink-0">
+                <Check className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
           ) : (
             <div
-              className={`flex items-center gap-2 group ${isOwner ? 'cursor-pointer' : ''}`}
+              className={`flex items-center gap-1.5 group min-w-0 ${isOwner ? 'cursor-pointer' : ''}`}
               onClick={() => isOwner && setIsEditingTitle(true)}
             >
-              <h2 className={`text-lg font-bold text-white tracking-wide ${isOwner ? 'group-hover:text-blue-400' : ''} transition`}>
+              <h2 className={`text-sm sm:text-lg font-bold text-white tracking-wide truncate ${isOwner ? 'group-hover:text-blue-400' : ''} transition`}>
                 {activeBoard.title}
               </h2>
               {isOwner && (
-                <Edit2 className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-400 transition opacity-0 group-hover:opacity-100" />
+                <Edit2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 group-hover:text-blue-400 transition opacity-0 group-hover:opacity-100 shrink-0" />
               )}
             </div>
           )
         ) : (
-          <h2 className="text-lg font-bold text-slate-400">Select a Board</h2>
+          <h2 className="text-sm sm:text-lg font-bold text-slate-400 truncate">Select Board</h2>
         )}
       </div>
 
       {/* Center: Search & Filter Controls */}
-      <div className="flex items-center gap-3 flex-1 max-w-xl">
+      <div className="flex items-center gap-2 flex-1 min-w-0 max-w-xl">
         {/* Real-time Search Input */}
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div className="relative flex-1 min-w-0">
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search cards by title or description..."
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/30 transition"
+            className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-8 pr-2 sm:pl-9 sm:pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/30 transition"
           />
         </div>
 
         {/* Priority Filter */}
-        <div className="flex items-center gap-1 bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-1">
+        <div className="hidden sm:flex items-center gap-1 bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-1 shrink-0">
           <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           <select
             value={selectedPriority}
@@ -164,32 +151,12 @@ export default function Navbar() {
             </option>
           </select>
         </div>
-
-        {/* Assignee Filter */}
-        {boardMembers.length > 0 && (
-          <div className="hidden md:flex items-center gap-1 bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-1">
-            <select
-              value={selectedAssignee}
-              onChange={(e) => setSelectedAssignee(e.target.value)}
-              className="bg-transparent text-xs text-slate-300 outline-none cursor-pointer"
-            >
-              <option value="all" className="bg-slate-900 text-slate-200">
-                All Assignees
-              </option>
-              {boardMembers.map((u) => (
-                <option key={u._id} value={u._id} className="bg-slate-900 text-slate-200">
-                  {u.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
-      {/* Right: Saving Status Badge, Theme Toggle & User Profile */}
-      <div className="flex items-center gap-3">
+      {/* Right: Saving Status Badge & User Profile */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {/* Real-time Save Status Indicator */}
-        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-slate-950/60 border border-slate-800/80">
+        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-slate-950/60 border border-slate-800/80">
           {saveStatus === 'saving' && (
             <>
               <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" />
@@ -216,18 +183,9 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Theme Toggle Button */}
-        <button
-          onClick={toggleTheme}
-          className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition"
-          title="Toggle Dark / Light mode"
-        >
-          {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-400" />}
-        </button>
-
         {/* User Profile Dropdown */}
         {session?.user && (
-          <div className="relative">
+          <div className="relative shrink-0">
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               className="flex items-center gap-2 p-1 hover:bg-slate-800 rounded-xl transition"
@@ -236,40 +194,46 @@ export default function Navbar() {
                 <img
                   src={session.user.image}
                   alt={session.user.name || 'User'}
-                  className="w-8 h-8 rounded-full border border-slate-700 object-cover"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-700 object-cover"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs">
                   {session.user.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
               )}
             </button>
 
-            {/* Dropdown Menu */}
+            {/* Dropdown Menu & Backdrop */}
             {isUserMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-3 z-50 animate-fade-in">
-                <div className="flex items-center gap-3 pb-3 mb-2 border-b border-slate-800">
-                  {session.user.image ? (
-                    <img src={session.user.image} alt="" className="w-9 h-9 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm">
-                      {session.user.name?.charAt(0).toUpperCase()}
+              <>
+                <div
+                  onClick={() => setIsUserMenuOpen(false)}
+                  className="fixed inset-0 z-40 bg-transparent"
+                />
+                <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-3 z-50 animate-fade-in">
+                  <div className="flex items-center gap-3 pb-3 mb-2 border-b border-slate-800">
+                    {session.user.image ? (
+                      <img src={session.user.image} alt="" className="w-9 h-9 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm">
+                        {session.user.name?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="overflow-hidden">
+                      <p className="text-xs font-bold text-white truncate">{session.user.name}</p>
+                      <p className="text-[11px] text-slate-400 truncate">{session.user.email}</p>
                     </div>
-                  )}
-                  <div className="overflow-hidden">
-                    <p className="text-xs font-bold text-white truncate">{session.user.name}</p>
-                    <p className="text-[11px] text-slate-400 truncate">{session.user.email}</p>
                   </div>
-                </div>
 
-                <button
-                  onClick={() => signOut({ callbackUrl: '/login' })}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-400 hover:bg-rose-950/40 rounded-xl transition text-left"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
-                </button>
-              </div>
+                  <button
+                    onClick={() => signOut({ callbackUrl: '/login' })}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-400 hover:bg-rose-950/40 rounded-xl transition text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </>
             )}
           </div>
         )}
