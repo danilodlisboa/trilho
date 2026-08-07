@@ -64,124 +64,131 @@ export default function Navbar() {
 
   const boardMembers = activeBoard?.members || users;
 
+  const renderSaveStatusContent = () => (
+    <>
+      {saveStatus === 'saving' && (
+        <>
+          <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" />
+          <span className="text-blue-400 font-medium">Saving...</span>
+        </>
+      )}
+      {saveStatus === 'saved' && (
+        <>
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="text-emerald-400 font-medium">{saveStatusMessage || 'Saved'}</span>
+        </>
+      )}
+      {saveStatus === 'error' && (
+        <>
+          <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
+          <span className="text-rose-400 font-medium">{saveStatusMessage || 'Error'}</span>
+        </>
+      )}
+      {saveStatus === 'idle' && (
+        <>
+          <Save className="w-3.5 h-3.5 text-slate-500" />
+          <span className="text-slate-500">Synced</span>
+        </>
+      )}
+    </>
+  );
+
   return (
-    <header className="h-16 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-2.5 sm:px-4 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-30 w-full">
-      {/* Left: Sidebar Toggle Button & Active Board Title */}
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 max-w-[45%] sm:max-w-none">
-        <button
-          type="button"
-          onClick={toggleSidebarContracted}
-          className="p-1.5 sm:p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition flex items-center justify-center shrink-0"
-          title={isSidebarContracted ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          <PanelLeft className="w-5 h-5 text-slate-300" />
-        </button>
-
-        <div className="hidden sm:flex items-center gap-2 text-blue-500 font-bold text-lg shrink-0">
-          <Kanban className="w-6 h-6" />
-        </div>
-
-        {activeBoard ? (
-          isOwner && isEditingTitle ? (
-            <div className="flex items-center gap-1 min-w-0">
-              <input
-                type="text"
-                value={boardTitleInput}
-                onChange={(e) => setBoardTitleInput(e.target.value)}
-                onBlur={handleTitleSubmit}
-                onKeyDown={(e) => e.key === 'Enter' && handleTitleSubmit()}
-                autoFocus
-                className="bg-slate-800 text-white font-bold text-sm sm:text-lg px-2 py-0.5 rounded border border-blue-500 outline-none w-24 sm:w-auto"
-              />
-              <button onClick={handleTitleSubmit} className="p-1 text-emerald-400 hover:bg-slate-800 rounded shrink-0">
-                <Check className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </div>
-          ) : (
-            <div
-              className={`flex items-center gap-1.5 group min-w-0 ${isOwner ? 'cursor-pointer' : ''}`}
-              onClick={() => isOwner && setIsEditingTitle(true)}
-            >
-              <h2 className={`text-sm sm:text-lg font-bold text-white tracking-wide truncate ${isOwner ? 'group-hover:text-blue-400' : ''} transition`}>
-                {activeBoard.title}
-              </h2>
-              {isOwner && (
-                <Edit2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 group-hover:text-blue-400 transition opacity-0 group-hover:opacity-100 shrink-0" />
-              )}
-            </div>
-          )
-        ) : (
-          <h2 className="text-sm sm:text-lg font-bold text-slate-400 truncate">Select Board</h2>
-        )}
-      </div>
-
-      {/* Center: Search & Filter Controls */}
-      <div className="flex items-center gap-2 flex-1 min-w-0 max-w-xl">
-        {/* Real-time Search Input */}
-        <div className="relative flex-1 min-w-0">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-8 pr-2 sm:pl-9 sm:pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/30 transition"
-          />
-        </div>
-
-        {/* Priority Filter */}
-        <div className="hidden sm:flex items-center gap-1 bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-1 shrink-0">
-          <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <select
-            value={selectedPriority}
-            onChange={(e) => setSelectedPriority(e.target.value as any)}
-            className="bg-transparent text-xs text-slate-300 outline-none cursor-pointer"
+    <>
+      <header className="h-16 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-2.5 sm:px-4 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-30 w-full">
+        {/* Left: Sidebar Toggle Button & Active Board Title */}
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 max-w-[45%] sm:max-w-none">
+          <button
+            type="button"
+            onClick={toggleSidebarContracted}
+            className="p-1.5 sm:p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition flex items-center justify-center shrink-0"
+            title={isSidebarContracted ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            <option value="all" className="bg-slate-900 text-slate-200">
-              All Priorities
-            </option>
-            <option value="high" className="bg-slate-900 text-rose-400 font-semibold">
-              High Priority
-            </option>
-            <option value="medium" className="bg-slate-900 text-amber-400 font-semibold">
-              Medium Priority
-            </option>
-            <option value="low" className="bg-slate-900 text-emerald-400 font-semibold">
-              Low Priority
-            </option>
-          </select>
-        </div>
-      </div>
+            <PanelLeft className="w-5 h-5 text-slate-300" />
+          </button>
 
-      {/* Right: Saving Status Badge & User Profile */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Real-time Save Status Indicator */}
-        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-slate-950/60 border border-slate-800/80">
-          {saveStatus === 'saving' && (
-            <>
-              <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" />
-              <span className="text-blue-400 font-medium">Saving...</span>
-            </>
-          )}
-          {saveStatus === 'saved' && (
-            <>
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-emerald-400 font-medium">{saveStatusMessage || 'Saved'}</span>
-            </>
-          )}
-          {saveStatus === 'error' && (
-            <>
-              <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
-              <span className="text-rose-400 font-medium">{saveStatusMessage || 'Error'}</span>
-            </>
-          )}
-          {saveStatus === 'idle' && (
-            <>
-              <Save className="w-3.5 h-3.5 text-slate-500" />
-              <span className="text-slate-500">Synced</span>
-            </>
+          <div className="hidden sm:flex items-center gap-2 text-blue-500 font-bold text-lg shrink-0">
+            <Kanban className="w-6 h-6" />
+          </div>
+
+          {activeBoard ? (
+            isOwner && isEditingTitle ? (
+              <div className="flex items-center gap-1 min-w-0">
+                <input
+                  type="text"
+                  value={boardTitleInput}
+                  onChange={(e) => setBoardTitleInput(e.target.value)}
+                  onBlur={handleTitleSubmit}
+                  onKeyDown={(e) => e.key === 'Enter' && handleTitleSubmit()}
+                  autoFocus
+                  className="bg-slate-800 text-white font-bold text-sm sm:text-lg px-2 py-0.5 rounded border border-blue-500 outline-none w-24 sm:w-auto"
+                />
+                <button onClick={handleTitleSubmit} className="p-1 text-emerald-400 hover:bg-slate-800 rounded shrink-0">
+                  <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              </div>
+            ) : (
+              <div
+                className={`flex items-center gap-1.5 group min-w-0 ${isOwner ? 'cursor-pointer' : ''}`}
+                onClick={() => isOwner && setIsEditingTitle(true)}
+              >
+                <h2 className={`text-sm sm:text-lg font-bold text-white tracking-wide truncate ${isOwner ? 'group-hover:text-blue-400' : ''} transition`}>
+                  {activeBoard.title}
+                </h2>
+                {isOwner && (
+                  <Edit2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 group-hover:text-blue-400 transition opacity-0 group-hover:opacity-100 shrink-0" />
+                )}
+              </div>
+            )
+          ) : (
+            <h2 className="text-sm sm:text-lg font-bold text-slate-400 truncate">Select Board</h2>
           )}
         </div>
+
+        {/* Center: Search & Filter Controls */}
+        <div className="flex items-center gap-2 flex-1 min-w-0 max-w-xl">
+          {/* Real-time Search Input */}
+          <div className="relative flex-1 min-w-0">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-8 pr-2 sm:pl-9 sm:pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/30 transition"
+            />
+          </div>
+
+          {/* Priority Filter */}
+          <div className="hidden sm:flex items-center gap-1 bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-1 shrink-0">
+            <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value as any)}
+              className="bg-transparent text-xs text-slate-300 outline-none cursor-pointer"
+            >
+              <option value="all" className="bg-slate-900 text-slate-200">
+                All Priorities
+              </option>
+              <option value="high" className="bg-slate-900 text-rose-400 font-semibold">
+                High Priority
+              </option>
+              <option value="medium" className="bg-slate-900 text-amber-400 font-semibold">
+                Medium Priority
+              </option>
+              <option value="low" className="bg-slate-900 text-emerald-400 font-semibold">
+                Low Priority
+              </option>
+            </select>
+          </div>
+        </div>
+
+        {/* Right: Saving Status Badge & User Profile */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Real-time Save Status Indicator (Desktop) */}
+          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-slate-950/60 border border-slate-800/80">
+            {renderSaveStatusContent()}
+          </div>
 
         {/* User Profile Dropdown */}
         {session?.user && (
@@ -239,5 +246,11 @@ export default function Navbar() {
         )}
       </div>
     </header>
+
+      {/* Floating Save Status Indicator for Mobile (Bottom Right) */}
+      <div className="flex md:hidden fixed bottom-4 right-4 z-40 items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-slate-900/90 border border-slate-800 shadow-xl shadow-black/50 backdrop-blur-md pointer-events-none transition-all duration-300">
+        {renderSaveStatusContent()}
+      </div>
+    </>
   );
 }

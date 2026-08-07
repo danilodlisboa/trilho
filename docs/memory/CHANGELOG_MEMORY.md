@@ -2,9 +2,10 @@
 
 This document records the chronological history of features, bug fixes, architecture changes, and commits in the **Trilho** repository.
 
----
-
 ## 📅 2026-08-07
+
+### 📱 Mobile Floating Save Status Badge (`src/components/layout/Navbar.tsx`)
+- **Mobile Save Indicator Visibility**: Extracted the real-time save status badge renderer in `Navbar.tsx` and added a floating mobile save status indicator fixed at the bottom-right corner (`fixed bottom-4 right-4 z-40 md:hidden flex`). Now the 'Saved' / 'Saving...' / 'Error' / 'Synced' status pill is clearly visible on mobile screens without cluttering the header bar.
 
 ### 📏 Enforce Strict Relative Paths Rule (`AGENTS.md`, `docs/memory/USER_DIRECTIVES.md`)
 - **Mandatory Relative Paths Rule**: Registered a strict project directive prohibiting absolute file paths in documentation, comments, markdown files, and memory logs. All path references must use clean relative paths.
