@@ -6,6 +6,15 @@ This document records the chronological history of features, bug fixes, architec
 
 ## 📅 2026-08-07
 
+### 🏷️ UI Text & Branding Adjustments (`src/components/layout/Sidebar.tsx`, `src/components/layout/Navbar.tsx`, `src/store/useKanbanStore.ts`)
+- **Removed NoSQL Badge**: Removed the `'NoSQL'` badge pill from the Trilho title in [Sidebar.tsx](file:///c:/Users/Danilo/code/trilho/src/components/layout/Sidebar.tsx).
+- **Simplified Save Status Indicator**: Updated the save status indicator text from `'Saved to DB'` to strictly `'Saved'` across [Navbar.tsx](file:///c:/Users/Danilo/code/trilho/src/components/layout/Navbar.tsx) and all Zustand store actions in [useKanbanStore.ts](file:///c:/Users/Danilo/code/trilho/src/store/useKanbanStore.ts).
+
+### 📱 Responsive Off-Canvas Mobile Drawer & Header Expand Toggle (`src/components/layout/Sidebar.tsx`, `src/components/layout/Navbar.tsx`)
+- **Off-Canvas Mobile Drawer (`-translate-x-full md:translate-x-0`)**: Configured sidebar to hide completely off-screen on small screens (`< md`) when contracted, with a smooth slide-in transition over a semi-transparent backdrop overlay when expanded.
+- **Header Expansion Toggle Button (`Navbar.tsx`)**: Added a sidebar toggle button (`PanelLeft`) at the far left of the header bar, allowing users to expand and collapse the sidebar from both mobile header and desktop.
+- **Auto-Close on Selection**: Automatically closes the mobile off-canvas drawer when a board is selected on mobile screens.
+
 ### 🎨 Sidebar Board Custom Fields & Manage Trigger Migration (`src/components/layout/Sidebar.tsx`, `src/components/kanban/KanbanBoard.tsx`)
 - **Moved Manage Board Fields Button**: Relocated the "Manage Board Fields" trigger button from the main `KanbanBoard` canvas top bar to a dedicated **Board Fields** section in the `Sidebar`.
 - **Top 5 Custom Fields Sidebar Preview**: Rendered a preview listing the first 5 custom fields (`customFields.slice(0, 5)`) for the active board directly inside the sidebar with type tags and default indicators.

@@ -104,6 +104,7 @@ interface KanbanStoreState {
   selectedCardModal: ICardData | null;
   isCreateBoardModalOpen: boolean;
   isDefaultFieldsModalOpen: boolean;
+  isSidebarContracted: boolean;
 
   // Actions
   setSearchQuery: (query: string) => void;
@@ -112,6 +113,8 @@ interface KanbanStoreState {
   setSelectedCardModal: (card: ICardData | null) => void;
   setIsCreateBoardModalOpen: (isOpen: boolean) => void;
   setIsDefaultFieldsModalOpen: (isOpen: boolean) => void;
+  setIsSidebarContracted: (contracted: boolean) => void;
+  toggleSidebarContracted: () => void;
 
   // Async API & State Actions
   fetchBoards: () => Promise<void>;
@@ -188,6 +191,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
   selectedCardModal: null,
   isCreateBoardModalOpen: false,
   isDefaultFieldsModalOpen: false,
+  isSidebarContracted: false,
 
   setSearchQuery: (query) => set({ searchQuery: query }),
   setSelectedPriority: (priority) => set({ selectedPriority: priority }),
@@ -195,6 +199,8 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
   setSelectedCardModal: (card) => set({ selectedCardModal: card }),
   setIsCreateBoardModalOpen: (isOpen) => set({ isCreateBoardModalOpen: isOpen }),
   setIsDefaultFieldsModalOpen: (isOpen) => set({ isDefaultFieldsModalOpen: isOpen }),
+  setIsSidebarContracted: (contracted) => set({ isSidebarContracted: contracted }),
+  toggleSidebarContracted: () => set((state) => ({ isSidebarContracted: !state.isSidebarContracted })),
 
   fetchBoards: async () => {
     set({ isLoadingBoards: true, fetchError: null });
@@ -352,7 +358,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
           columns: data.columns,
           cards: data.cards,
           saveStatus: 'saved',
-          saveStatusMessage: 'Saved to DB',
+          saveStatusMessage: 'Saved',
         });
         await get().fetchCustomFields(boardId);
       } else {
@@ -412,7 +418,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
       });
 
       if (res.ok) {
-        set({ saveStatus: 'saved', saveStatusMessage: 'Saved to DB' });
+        set({ saveStatus: 'saved', saveStatusMessage: 'Saved' });
         get().fetchBoards();
       } else {
         set({ saveStatus: 'error', saveStatusMessage: 'Error updating title' });
@@ -465,7 +471,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
         set({
           columns: [...get().columns, newCol],
           saveStatus: 'saved',
-          saveStatusMessage: 'Saved to DB',
+          saveStatusMessage: 'Saved',
         });
       } else {
         set({ saveStatus: 'error', saveStatusMessage: 'Error creating column' });
@@ -489,7 +495,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
       });
 
       if (res.ok) {
-        set({ saveStatus: 'saved', saveStatusMessage: 'Saved to DB' });
+        set({ saveStatus: 'saved', saveStatusMessage: 'Saved' });
       } else {
         set({ saveStatus: 'error', saveStatusMessage: 'Error renaming column' });
       }
@@ -511,7 +517,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
       });
 
       if (res.ok) {
-        set({ saveStatus: 'saved', saveStatusMessage: 'Saved to DB' });
+        set({ saveStatus: 'saved', saveStatusMessage: 'Saved' });
       } else {
         set({ saveStatus: 'error', saveStatusMessage: 'Error deleting column' });
       }
@@ -538,7 +544,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
         set({
           cards: [...get().cards, newCard],
           saveStatus: 'saved',
-          saveStatusMessage: 'Saved to DB',
+          saveStatusMessage: 'Saved',
         });
       } else {
         set({ saveStatus: 'error', saveStatusMessage: 'Error creating card' });
@@ -572,7 +578,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
           cards: get().cards.map((c) => (c._id === cardId ? updatedCardFromDb : c)),
           selectedCardModal: get().selectedCardModal?._id === cardId ? updatedCardFromDb : get().selectedCardModal,
           saveStatus: 'saved',
-          saveStatusMessage: 'Saved to DB',
+          saveStatusMessage: 'Saved',
         });
       } else {
         set({ saveStatus: 'error', saveStatusMessage: 'Error updating card' });
@@ -594,7 +600,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
       });
 
       if (res.ok) {
-        set({ saveStatus: 'saved', saveStatusMessage: 'Saved to DB' });
+        set({ saveStatus: 'saved', saveStatusMessage: 'Saved' });
       } else {
         set({ saveStatus: 'error', saveStatusMessage: 'Error deleting card' });
       }
@@ -742,7 +748,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
     })
       .then((res) => {
         if (res.ok) {
-          set({ saveStatus: 'saved', saveStatusMessage: 'Saved to DB' });
+          set({ saveStatus: 'saved', saveStatusMessage: 'Saved' });
         } else {
           set({ saveStatus: 'error', saveStatusMessage: 'Column reorder failed' });
         }
@@ -803,7 +809,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
     })
       .then((res) => {
         if (res.ok) {
-          set({ saveStatus: 'saved', saveStatusMessage: 'Saved to DB' });
+          set({ saveStatus: 'saved', saveStatusMessage: 'Saved' });
         } else {
           set({ saveStatus: 'error', saveStatusMessage: 'Reorder sync failed' });
         }

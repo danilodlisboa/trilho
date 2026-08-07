@@ -6,18 +6,17 @@ import { useKanbanStore } from '@/store/useKanbanStore';
 import {
   Search,
   Filter,
-  Plus,
   Save,
   CheckCircle2,
   Loader2,
   AlertCircle,
   LogOut,
-  User as UserIcon,
   Sun,
   Moon,
   Kanban,
   Edit2,
   Check,
+  PanelLeft,
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -34,6 +33,8 @@ export default function Navbar() {
     users,
     saveStatus,
     saveStatusMessage,
+    isSidebarContracted,
+    toggleSidebarContracted,
   } = useKanbanStore();
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -79,8 +80,17 @@ export default function Navbar() {
 
   return (
     <header className="h-16 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-4 flex items-center justify-between gap-4 sticky top-0 z-30">
-      {/* Left: Active Board Title Inline Edit */}
+      {/* Left: Sidebar Toggle Button & Active Board Title */}
       <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={toggleSidebarContracted}
+          className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition flex items-center justify-center"
+          title={isSidebarContracted ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <PanelLeft className="w-5 h-5 text-slate-300" />
+        </button>
+
         <div className="flex items-center gap-2 text-blue-500 font-bold text-lg">
           <Kanban className="w-6 h-6" />
         </div>
@@ -189,7 +199,7 @@ export default function Navbar() {
           {saveStatus === 'saved' && (
             <>
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-emerald-400 font-medium">{saveStatusMessage || 'Saved to DB'}</span>
+              <span className="text-emerald-400 font-medium">{saveStatusMessage || 'Saved'}</span>
             </>
           )}
           {saveStatus === 'error' && (
