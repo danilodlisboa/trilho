@@ -11,11 +11,11 @@ import {
   ChevronRight,
   Trash2,
   Users,
-  Kanban,
   Mail,
   Check,
   X,
   UserPlus,
+  Tag,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -31,10 +31,12 @@ export default function Sidebar() {
     boards,
     pendingInvitations,
     activeBoard,
+    customFields,
     fetchBoardDetails,
     fetchPendingInvitations,
     deleteBoard,
     setIsCreateBoardModalOpen,
+    setIsDefaultFieldsModalOpen,
     acceptInvitation,
     declineInvitation,
     inviteMember,
@@ -186,6 +188,71 @@ export default function Sidebar() {
             </div>
           )}
         </div>
+
+        {/* Board Custom Fields Section */}
+        {activeBoard && !isCollapsed && (
+          <div className="border-t border-slate-800/60 pt-4">
+            <div className="flex items-center justify-between px-2 mb-2">
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <Tag className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-[11px] font-bold tracking-wider uppercase">
+                  Board Fields ({customFields.length})
+                </span>
+              </div>
+              <button
+                onClick={() => setIsDefaultFieldsModalOpen(true)}
+                className="p-1 hover:bg-slate-800 text-blue-400 hover:text-blue-300 rounded transition"
+                title="Manage Custom Fields"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* List First 5 Custom Fields */}
+            <div className="space-y-1.5 px-2">
+              {customFields.slice(0, 5).map((field) => (
+                <div
+                  key={field._id}
+                  className="flex items-center justify-between p-2 bg-slate-950/60 border border-slate-800/80 rounded-xl text-xs"
+                >
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span className="font-semibold text-slate-200 truncate">{field.name}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase font-mono">
+                      {field.fieldType}
+                    </span>
+                  </div>
+                  {field.isDefault && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
+                      Default
+                    </span>
+                  )}
+                </div>
+              ))}
+
+              {customFields.length > 5 && (
+                <button
+                  onClick={() => setIsDefaultFieldsModalOpen(true)}
+                  className="w-full text-left text-[11px] text-blue-400 font-semibold hover:underline pt-0.5 px-1"
+                >
+                  + {customFields.length - 5} more fields...
+                </button>
+              )}
+
+              {customFields.length === 0 && (
+                <p className="text-[11px] text-slate-500 px-1 py-1">No custom fields defined.</p>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setIsDefaultFieldsModalOpen(true)}
+                className="w-full mt-2 py-2 bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-300 hover:text-white rounded-xl transition flex items-center justify-center gap-1.5"
+              >
+                <Tag className="w-3.5 h-3.5 text-blue-400" />
+                <span>Manage Board Fields</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Pending Invitations Section */}
         {pendingInvitations.length > 0 && !isCollapsed && (
@@ -368,4 +435,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-

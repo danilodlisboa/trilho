@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { DragDropContext, DropResult } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { useKanbanStore } from '@/store/useKanbanStore';
 import KanbanColumn from './KanbanColumn';
-import { Plus, X, Layers } from 'lucide-react';
+import DefaultFieldsModal from '../modals/DefaultFieldsModal';
+import { Plus, X, Layers, Tag } from 'lucide-react';
 
 export default function KanbanBoard() {
   const {
@@ -12,20 +13,29 @@ export default function KanbanBoard() {
     columns,
     cards,
     moveCardOptimistic,
+    moveColumnOptimistic,
     createColumn,
     searchQuery,
     selectedPriority,
     selectedAssignee,
+    setIsDefaultFieldsModalOpen,
   } = useKanbanStore();
 
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColTitle, setNewColTitle] = useState('');
 
   const handleDragEnd = (result: DropResult) => {
-    const { destination, source, draggableId } = result;
+    const { destination, source, draggableId, type } = result;
 
     if (!destination) return;
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+
+    if (type === 'COLUMN') {
+      if (activeBoard) {
+        moveColumnOptimistic(activeBoard._id, source.index, destination.index);
+      }
+      return;
+    }
 
     moveCardOptimistic(
       draggableId,
@@ -90,59 +100,75 @@ export default function KanbanBoard() {
     );
   }
 
-  return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex-1 p-6 overflow-x-auto">
-        <div className="flex gap-5 items-start min-h-[calc(100vh-10rem)] pb-4">
-          {columns.map((col) => {
-            const colCards = getFilteredCardsForColumn(col._id);
-            return <KanbanColumn key={col._id} column={col} cards={colCards} />;
-          })}
+  // Sort columns by order
+  const sortedColumns = [...columns].sort((a, b) => a.order - b.order);
 
-          {/* Add New Column Box */}
-          <div className="w-80 shrink-0">
-            {isAddingColumn ? (
-              <form
-                onSubmit={handleCreateColumnSubmit}
-                className="bg-slate-900 border border-blue-500/80 rounded-2xl p-4 space-y-3 shadow-xl"
+  return (
+    <>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex-1 p-6 overflow-x-auto">
+          <Droppable droppableId="board-columns" direction="horizontal" type="COLUMN">
+            {(provided) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="flex gap-5 items-start min-h-[calc(100vh-12rem)] pb-4"
               >
-                <h4 className="font-bold text-sm text-slate-200">New Column</h4>
-                <input
-                  type="text"
-                  placeholder="Column name (ex: Testing, Deploy)..."
-                  value={newColTitle}
-                  onChange={(e) => setNewColTitle(e.target.value)}
-                  autoFocus
-                  className="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 outline-none focus:border-blue-500"
-                />
-                <div className="flex items-center gap-2">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2 rounded-xl transition shadow-lg shadow-blue-600/20"
-                  >
-                    Save Column
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingColumn(false)}
-                    className="p-2 text-slate-400 hover:bg-slate-800 rounded-xl"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                {sortedColumns.map((col, index) => {
+                  const colCards = getFilteredCardsForColumn(col._id);
+                  return <KanbanColumn key={col._id} column={col} cards={colCards} index={index} />;
+                })}
+                {provided.placeholder}
+
+                {/* Add New Column Box */}
+                <div className="w-80 shrink-0">
+                  {isAddingColumn ? (
+                    <form
+                      onSubmit={handleCreateColumnSubmit}
+                      className="bg-slate-900 border border-blue-500/80 rounded-2xl p-4 space-y-3 shadow-xl"
+                    >
+                      <h4 className="font-bold text-sm text-slate-200">New Column</h4>
+                      <input
+                        type="text"
+                        placeholder="Column name (ex: Testing, Deploy)..."
+                        value={newColTitle}
+                        onChange={(e) => setNewColTitle(e.target.value)}
+                        autoFocus
+                        className="w-full bg-slate-950 border border-slate-700 text-white text-xs rounded-xl p-2.5 outline-none focus:border-blue-500"
+                      />
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="submit"
+                          className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2 rounded-xl transition shadow-lg shadow-blue-600/20"
+                        >
+                          Save Column
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingColumn(false)}
+                          className="p-2 text-slate-400 hover:bg-slate-800 rounded-xl"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <button
+                      onClick={() => setIsAddingColumn(true)}
+                      className="w-full h-14 bg-slate-900/60 border-2 border-dashed border-slate-800 hover:border-blue-500/50 hover:bg-slate-900 text-slate-400 hover:text-blue-400 rounded-2xl flex items-center justify-center gap-2 font-semibold text-sm transition group"
+                    >
+                      <Plus className="w-4 h-4 group-hover:scale-110 transition" />
+                      <span>Add Column</span>
+                    </button>
+                  )}
                 </div>
-              </form>
-            ) : (
-              <button
-                onClick={() => setIsAddingColumn(true)}
-                className="w-full h-14 bg-slate-900/60 border-2 border-dashed border-slate-800 hover:border-blue-500/50 hover:bg-slate-900 text-slate-400 hover:text-blue-400 rounded-2xl flex items-center justify-center gap-2 font-semibold text-sm transition group"
-              >
-                <Plus className="w-4 h-4 group-hover:scale-110 transition" />
-                <span>Add Column</span>
-              </button>
+              </div>
             )}
-          </div>
+          </Droppable>
         </div>
-      </div>
-    </DragDropContext>
+      </DragDropContext>
+
+      <DefaultFieldsModal />
+    </>
   );
 }

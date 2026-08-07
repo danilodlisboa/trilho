@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useKanbanStore, IChecklistItem } from '@/store/useKanbanStore';
+import { useKanbanStore, IChecklistItem, ICustomFieldValue } from '@/store/useKanbanStore';
 import {
   X,
   Trash2,
@@ -10,9 +10,9 @@ import {
   CheckSquare,
   Plus,
   AlignLeft,
-  Clock,
   CheckCircle2,
   Circle,
+  Tag,
 } from 'lucide-react';
 
 export default function CardDetailModal() {
@@ -24,6 +24,7 @@ export default function CardDetailModal() {
     users,
     fetchUsers,
     activeBoard,
+    customFields: boardCustomFields,
   } = useKanbanStore();
 
   const [title, setTitle] = useState('');
@@ -33,6 +34,7 @@ export default function CardDetailModal() {
   const [assigneeId, setAssigneeId] = useState('');
   const [checklist, setChecklist] = useState<IChecklistItem[]>([]);
   const [newChecklistText, setNewChecklistText] = useState('');
+  const [cardCustomFields, setCardCustomFields] = useState<ICustomFieldValue[]>([]);
 
   useEffect(() => {
     fetchUsers();
@@ -46,7 +48,10 @@ export default function CardDetailModal() {
 
       if (selectedCardModal.dueDate) {
         const d = new Date(selectedCardModal.dueDate);
-        setDueDate(d.toISOString().split('T')[0]);
+        const isoLocal = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 16);
+        setDueDate(isoLocal);
       } else {
         setDueDate('');
       }
@@ -58,6 +63,7 @@ export default function CardDetailModal() {
       setAssigneeId(aId);
 
       setChecklist(selectedCardModal.checklist || []);
+      setCardCustomFields(selectedCardModal.customFields || []);
     }
   }, [selectedCardModal]);
 
@@ -88,6 +94,32 @@ export default function CardDetailModal() {
   const handleAssigneeChange = (newAssignee: string) => {
     setAssigneeId(newAssignee);
     updateCard(selectedCardModal._id, { assigneeId: newAssignee || null });
+  };
+
+  // Custom Fields Actions
+  const handleCustomFieldValueChange = (fieldId: string, val: string) => {
+    const updated = cardCustomFields.map((cf) =>
+      cf.fieldId === fieldId ? { ...cf, value: val } : cf
+    );
+    setCardCustomFields(updated);
+    updateCard(selectedCardModal._id, { customFields: updated });
+  };
+
+  const handleAttachCustomField = (fieldId: string) => {
+    if (!fieldId) return;
+    const def = boardCustomFields.find((f) => f._id === fieldId);
+    if (!def) return;
+
+    const initialVal = def.defaultValue || (def.fieldType === 'select' ? def.options[0] || '' : '');
+    const updated = [...cardCustomFields, { fieldId, value: initialVal }];
+    setCardCustomFields(updated);
+    updateCard(selectedCardModal._id, { customFields: updated });
+  };
+
+  const handleDetachCustomField = (fieldId: string) => {
+    const updated = cardCustomFields.filter((cf) => cf.fieldId !== fieldId);
+    setCardCustomFields(updated);
+    updateCard(selectedCardModal._id, { customFields: updated });
   };
 
   // Checklist Actions
@@ -130,6 +162,11 @@ export default function CardDetailModal() {
   const totalItems = checklist.length;
   const completedItems = checklist.filter((item) => item.completed).length;
   const progressPercent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+  // Unattached board custom fields
+  const unattachedCustomFields = boardCustomFields.filter(
+    (bcf) => !cardCustomFields.some((ccf) => ccf.fieldId === bcf._id)
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
@@ -194,14 +231,14 @@ export default function CardDetailModal() {
               </div>
             </div>
 
-            {/* Due Date Input */}
+            {/* Datetime Due Date Input */}
             <div>
               <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
                 <Calendar className="w-3 h-3 text-slate-400" />
-                <span>Due Date</span>
+                <span>Due Date & Time</span>
               </label>
               <input
-                type="date"
+                type="datetime-local"
                 value={dueDate}
                 onChange={(e) => handleDueDateChange(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-800 rounded-lg p-1.5 text-xs text-slate-200 outline-none focus:border-blue-500"
@@ -243,6 +280,90 @@ export default function CardDetailModal() {
               placeholder="Add a detailed description..."
               className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-3.5 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-blue-500 transition leading-relaxed resize-y"
             />
+          </div>
+
+          {/* Custom Fields Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-300 flex items-center gap-2">
+                <Tag className="w-4 h-4 text-blue-400" />
+                <span>Custom Fields</span>
+              </label>
+              {unattachedCustomFields.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <select
+                    onChange={(e) => {
+                      handleAttachCustomField(e.target.value);
+                      e.target.value = '';
+                    }}
+                    defaultValue=""
+                    className="bg-slate-950 border border-slate-800 text-[11px] text-blue-400 font-semibold rounded-lg px-2 py-1 outline-none cursor-pointer"
+                  >
+                    <option value="" disabled>
+                      + Attach Field...
+                    </option>
+                    {unattachedCustomFields.map((f) => (
+                      <option key={f._id} value={f._id}>
+                        {f.name} ({f.fieldType})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {cardCustomFields.length === 0 ? (
+              <div className="p-3 bg-slate-950/40 border border-slate-800/80 rounded-xl text-center text-xs text-slate-500">
+                No custom fields attached to this card.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950/60 p-3.5 rounded-2xl border border-slate-800/80">
+                {cardCustomFields.map((cf) => {
+                  const def = boardCustomFields.find((bcf) => bcf._id === cf.fieldId);
+                  if (!def) return null;
+
+                  return (
+                    <div key={cf.fieldId} className="space-y-1 relative group">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                          {def.name}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => handleDetachCustomField(cf.fieldId)}
+                          className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-400 p-0.5 rounded transition"
+                          title="Detach Field"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+
+                      {def.fieldType === 'select' ? (
+                        <select
+                          value={cf.value}
+                          onChange={(e) => handleCustomFieldValueChange(cf.fieldId, e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg p-1.5 text-xs text-slate-200 outline-none focus:border-blue-500 cursor-pointer"
+                        >
+                          {def.options.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type={def.fieldType === 'number' ? 'number' : def.fieldType === 'date' ? 'date' : 'text'}
+                          value={cf.value}
+                          onChange={(e) => handleCustomFieldValueChange(cf.fieldId, e.target.value)}
+                          placeholder={`Enter ${def.name.toLowerCase()}...`}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg p-1.5 text-xs text-slate-200 outline-none focus:border-blue-500"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Checklist Section */}

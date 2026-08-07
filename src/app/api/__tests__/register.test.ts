@@ -77,7 +77,7 @@ describe('POST /api/register API Route Unit Tests', () => {
     const data = await res.json();
 
     expect(res.status).toBe(201);
-    expect(data.message).toBe('User registered successfully!');
+    expect(data.message).toBe('User registered successfully! Please check your email to verify your account.');
     expect(data.user.id).toBe('user_123');
     expect(data.user.email).toBe('test@example.com');
   });

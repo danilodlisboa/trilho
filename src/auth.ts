@@ -29,6 +29,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error('Incorrect password');
         }
 
+        if (!user.isVerified) {
+          throw new Error('Account email not verified. Please check your inbox or resend verification email.');
+        }
+
         return {
           id: user._id.toString(),
           name: user.name,

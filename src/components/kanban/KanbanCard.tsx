@@ -40,10 +40,18 @@ export default function KanbanCard({ card, index }: KanbanCardProps) {
   const totalChecklist = card.checklist ? card.checklist.length : 0;
   const completedChecklist = card.checklist ? card.checklist.filter((item) => item.completed).length : 0;
 
-  // Format due date string in en-US
+  // Format due date string in en-US with time if available
   const formattedDueDate = card.dueDate
-    ? new Date(card.dueDate).toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
+    ? new Date(card.dueDate).toLocaleDateString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
     : null;
+
+  // Custom fields state from store
+  const { customFields: boardCustomFields } = useKanbanStore();
 
   // Assignee helper
   const assignee = typeof card.assigneeId === 'object' && card.assigneeId ? card.assigneeId : null;
@@ -62,14 +70,30 @@ export default function KanbanCard({ card, index }: KanbanCardProps) {
               : 'border-slate-800/80 hover:bg-slate-850/90'
           }`}
         >
-          {/* Top Row: Priority Badge */}
-          <div className="flex items-center justify-between mb-2">
+          {/* Top Row: Priority Badge & Custom Field Tags */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
             <span
               className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border flex items-center gap-1.5 ${priorityStyle.bg}`}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${priorityStyle.dot}`} />
               {priorityStyle.label}
             </span>
+
+            {/* Custom Field Badges */}
+            {card.customFields &&
+              card.customFields.map((cf) => {
+                const def = boardCustomFields.find((bcf) => bcf._id === cf.fieldId);
+                if (!def || !cf.value) return null;
+                return (
+                  <span
+                    key={cf.fieldId}
+                    className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/20 max-w-[120px] truncate"
+                    title={`${def.name}: ${cf.value}`}
+                  >
+                    {def.name}: {cf.value}
+                  </span>
+                );
+              })}
           </div>
 
           {/* Card Title */}

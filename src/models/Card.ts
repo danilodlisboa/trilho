@@ -6,6 +6,11 @@ export interface IChecklistItem {
   completed: boolean;
 }
 
+export interface ICustomFieldValue {
+  fieldId: mongoose.Types.ObjectId | string;
+  value: string;
+}
+
 export interface ICard extends Document {
   _id: mongoose.Types.ObjectId;
   columnId: mongoose.Types.ObjectId;
@@ -16,6 +21,7 @@ export interface ICard extends Document {
   dueDate?: Date;
   assigneeId?: mongoose.Types.ObjectId;
   checklist: IChecklistItem[];
+  customFields: ICustomFieldValue[];
   order: number;
   createdAt: Date;
 }
@@ -24,6 +30,11 @@ const ChecklistItemSchema = new Schema({
   id: { type: String, required: true },
   text: { type: String, required: true },
   completed: { type: Boolean, default: false },
+});
+
+const CustomFieldValueSchema = new Schema({
+  fieldId: { type: Schema.Types.ObjectId, ref: 'CustomFieldDefinition', required: true },
+  value: { type: String, default: '' },
 });
 
 const CardSchema: Schema<ICard> = new Schema(
@@ -36,6 +47,7 @@ const CardSchema: Schema<ICard> = new Schema(
     dueDate: { type: Date, default: null },
     assigneeId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     checklist: [ChecklistItemSchema],
+    customFields: [CustomFieldValueSchema],
     order: { type: Number, required: true, default: 0 },
   },
   {

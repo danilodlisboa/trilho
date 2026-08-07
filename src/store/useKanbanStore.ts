@@ -28,6 +28,21 @@ export interface IChecklistItem {
   completed: boolean;
 }
 
+export interface ICustomFieldValue {
+  fieldId: string;
+  value: string;
+}
+
+export interface ICustomFieldDefinition {
+  _id: string;
+  boardId: string;
+  name: string;
+  fieldType: 'text' | 'number' | 'select' | 'date';
+  options: string[];
+  isDefault: boolean;
+  defaultValue?: string;
+}
+
 export interface ICardData {
   _id: string;
   boardId: string;
@@ -38,6 +53,7 @@ export interface ICardData {
   dueDate?: string | null;
   assigneeId?: IUserRef | string | null;
   checklist: IChecklistItem[];
+  customFields?: ICustomFieldValue[];
   order: number;
 }
 
@@ -74,6 +90,7 @@ interface KanbanStoreState {
   activeBoard: IBoardData | null;
   columns: IColumnData[];
   cards: ICardData[];
+  customFields: ICustomFieldDefinition[];
   users: IUserRef[];
 
   // UI State
@@ -86,6 +103,7 @@ interface KanbanStoreState {
   selectedAssignee: string; // 'all' or userId
   selectedCardModal: ICardData | null;
   isCreateBoardModalOpen: boolean;
+  isDefaultFieldsModalOpen: boolean;
 
   // Actions
   setSearchQuery: (query: string) => void;
@@ -93,6 +111,7 @@ interface KanbanStoreState {
   setSelectedAssignee: (assigneeId: string) => void;
   setSelectedCardModal: (card: ICardData | null) => void;
   setIsCreateBoardModalOpen: (isOpen: boolean) => void;
+  setIsDefaultFieldsModalOpen: (isOpen: boolean) => void;
 
   // Async API & State Actions
   fetchBoards: () => Promise<void>;
@@ -116,7 +135,31 @@ interface KanbanStoreState {
   updateCard: (cardId: string, updates: Partial<ICardData>) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
 
-  // Optimistic Move & Reorder Card
+  // Custom Fields Actions
+  fetchCustomFields: (boardId: string) => Promise<void>;
+  createCustomField: (
+    boardId: string,
+    name: string,
+    fieldType: string,
+    options?: string[],
+    isDefault?: boolean,
+    defaultValue?: string
+  ) => Promise<void>;
+  updateCustomField: (
+    boardId: string,
+    fieldId: string,
+    updates: Partial<ICustomFieldDefinition>
+  ) => Promise<void>;
+  deleteCustomField: (boardId: string, fieldId: string) => Promise<void>;
+  toggleDefaultCustomField: (
+    boardId: string,
+    fieldId: string,
+    isDefault: boolean,
+    defaultValue?: string
+  ) => Promise<void>;
+
+  // Optimistic Move & Reorder
+  moveColumnOptimistic: (boardId: string, sourceIndex: number, destIndex: number) => void;
   moveCardOptimistic: (
     cardId: string,
     sourceColumnId: string,
@@ -132,6 +175,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
   activeBoard: null,
   columns: [],
   cards: [],
+  customFields: [],
   users: [],
 
   isLoadingBoards: true,
@@ -143,12 +187,14 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
   selectedAssignee: 'all',
   selectedCardModal: null,
   isCreateBoardModalOpen: false,
+  isDefaultFieldsModalOpen: false,
 
   setSearchQuery: (query) => set({ searchQuery: query }),
   setSelectedPriority: (priority) => set({ selectedPriority: priority }),
   setSelectedAssignee: (assigneeId) => set({ selectedAssignee: assigneeId }),
   setSelectedCardModal: (card) => set({ selectedCardModal: card }),
   setIsCreateBoardModalOpen: (isOpen) => set({ isCreateBoardModalOpen: isOpen }),
+  setIsDefaultFieldsModalOpen: (isOpen) => set({ isDefaultFieldsModalOpen: isOpen }),
 
   fetchBoards: async () => {
     set({ isLoadingBoards: true, fetchError: null });
@@ -308,6 +354,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
           saveStatus: 'saved',
           saveStatusMessage: 'Saved to DB',
         });
+        await get().fetchCustomFields(boardId);
       } else {
         checkUnauthorized(res);
         set({ saveStatus: 'error', saveStatusMessage: 'Failed to load board' });
@@ -335,6 +382,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
           activeBoard: data.board,
           columns: data.columns,
           cards: [],
+          customFields: [],
           saveStatus: 'saved',
           saveStatusMessage: 'Board created',
           isCreateBoardModalOpen: false,
@@ -388,7 +436,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
         if (remainingBoards.length > 0) {
           get().fetchBoardDetails(remainingBoards[0]._id);
         } else {
-          set({ activeBoard: null, columns: [], cards: [] });
+          set({ activeBoard: null, columns: [], cards: [], customFields: [] });
         }
         set({ saveStatus: 'saved', saveStatusMessage: 'Board deleted' });
       } else {
@@ -556,10 +604,158 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
     }
   },
 
+  // Custom Fields Actions
+  fetchCustomFields: async (boardId: string) => {
+    try {
+      const res = await fetch(`/api/boards/${boardId}/custom-fields`);
+      if (res.ok) {
+        const customFields = await res.json();
+        set({ customFields });
+      }
+    } catch (err) {
+      console.error('Failed to fetch custom fields:', err);
+    }
+  },
+
+  createCustomField: async (boardId, name, fieldType, options = [], isDefault = false, defaultValue = '') => {
+    try {
+      set({ saveStatus: 'saving', saveStatusMessage: 'Creating custom field...' });
+      const res = await fetch(`/api/boards/${boardId}/custom-fields`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, fieldType, options, isDefault, defaultValue }),
+      });
+
+      if (res.ok) {
+        const newField = await res.json();
+        set({
+          customFields: [...get().customFields, newField],
+          saveStatus: 'saved',
+          saveStatusMessage: 'Custom field created',
+        });
+      } else {
+        set({ saveStatus: 'error', saveStatusMessage: 'Failed to create custom field' });
+      }
+    } catch (err) {
+      console.error('Error creating custom field:', err);
+      set({ saveStatus: 'error', saveStatusMessage: 'Connection error' });
+    }
+  },
+
+  updateCustomField: async (boardId, fieldId, updates) => {
+    try {
+      set({ saveStatus: 'saving', saveStatusMessage: 'Updating custom field...' });
+      const res = await fetch(`/api/boards/${boardId}/custom-fields/${fieldId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+
+      if (res.ok) {
+        const updatedField = await res.json();
+        set({
+          customFields: get().customFields.map((f) => (f._id === fieldId ? updatedField : f)),
+          saveStatus: 'saved',
+          saveStatusMessage: 'Custom field updated',
+        });
+      } else {
+        set({ saveStatus: 'error', saveStatusMessage: 'Failed to update custom field' });
+      }
+    } catch (err) {
+      console.error('Error updating custom field:', err);
+      set({ saveStatus: 'error', saveStatusMessage: 'Connection error' });
+    }
+  },
+
+  deleteCustomField: async (boardId, fieldId) => {
+    try {
+      set({ saveStatus: 'saving', saveStatusMessage: 'Deleting custom field...' });
+      const res = await fetch(`/api/boards/${boardId}/custom-fields/${fieldId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        set({
+          customFields: get().customFields.filter((f) => f._id !== fieldId),
+          // Also strip deleted field from in-memory cards
+          cards: get().cards.map((c) => ({
+            ...c,
+            customFields: c.customFields?.filter((cf) => cf.fieldId !== fieldId),
+          })),
+          saveStatus: 'saved',
+          saveStatusMessage: 'Custom field deleted',
+        });
+      } else {
+        set({ saveStatus: 'error', saveStatusMessage: 'Failed to delete custom field' });
+      }
+    } catch (err) {
+      console.error('Error deleting custom field:', err);
+      set({ saveStatus: 'error', saveStatusMessage: 'Connection error' });
+    }
+  },
+
+  toggleDefaultCustomField: async (boardId, fieldId, isDefault, defaultValue = '') => {
+    try {
+      set({ saveStatus: 'saving', saveStatusMessage: 'Updating default field...' });
+      const res = await fetch(`/api/boards/${boardId}/custom-fields/${fieldId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isDefault, defaultValue }),
+      });
+
+      if (res.ok) {
+        const updatedField = await res.json();
+        set({
+          customFields: get().customFields.map((f) => (f._id === fieldId ? updatedField : f)),
+          saveStatus: 'saved',
+          saveStatusMessage: 'Default field updated',
+        });
+      } else {
+        set({ saveStatus: 'error', saveStatusMessage: 'Failed to toggle default field' });
+      }
+    } catch (err) {
+      console.error('Error toggling default custom field:', err);
+      set({ saveStatus: 'error', saveStatusMessage: 'Connection error' });
+    }
+  },
+
+  moveColumnOptimistic: (boardId, sourceIndex, destIndex) => {
+    const cols = [...get().columns];
+    const [movedCol] = cols.splice(sourceIndex, 1);
+    cols.splice(destIndex, 0, movedCol);
+
+    cols.forEach((col, idx) => {
+      col.order = idx;
+    });
+
+    set({ columns: cols, saveStatus: 'saving', saveStatusMessage: 'Saving column order...' });
+
+    const columnsToSync = cols.map((c) => ({
+      id: c._id,
+      order: c.order,
+    }));
+
+    fetch('/api/columns/reorder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ columns: columnsToSync }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          set({ saveStatus: 'saved', saveStatusMessage: 'Saved to DB' });
+        } else {
+          set({ saveStatus: 'error', saveStatusMessage: 'Column reorder failed' });
+        }
+      })
+      .catch((err) => {
+        console.error('Column reorder sync error:', err);
+        set({ saveStatus: 'error', saveStatusMessage: 'Connection error' });
+      });
+  },
+
   moveCardOptimistic: (cardId, sourceColumnId, destColumnId, sourceIndex, destIndex) => {
     const allCards = [...get().cards];
 
-    // Filter cards by column and sort by order
     const sourceCards = allCards
       .filter((c) => c.columnId === sourceColumnId)
       .sort((a, b) => a.order - b.order);
@@ -573,14 +769,12 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
     if (!draggedCard) return;
 
     if (sourceColumnId === destColumnId) {
-      // Reorder within the same column
       sourceCards.splice(sourceIndex, 1);
       sourceCards.splice(destIndex, 0, draggedCard);
       sourceCards.forEach((card, idx) => {
         card.order = idx;
       });
     } else {
-      // Move between different columns
       draggedCard.columnId = destColumnId;
       sourceCards.splice(sourceIndex, 1);
       destCards.splice(destIndex, 0, draggedCard);
@@ -596,7 +790,6 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
     const updatedAllCards = [...allCards].sort((a, b) => a.order - b.order);
     set({ cards: updatedAllCards, saveStatus: 'saving', saveStatusMessage: 'Saving reorder...' });
 
-    // Prepare batch update payload for API
     const updatedCardsToSync = allCards.map((c) => ({
       id: c._id,
       columnId: c.columnId,

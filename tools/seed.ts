@@ -7,6 +7,7 @@ import { User } from '../src/models/User';
 import { Board } from '../src/models/Board';
 import { Column } from '../src/models/Column';
 import { Card } from '../src/models/Card';
+import { CustomFieldDefinition } from '../src/models/CustomFieldDefinition';
 
 // Load environment variables from .env.local
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -23,6 +24,7 @@ async function seedDatabase() {
     await Board.deleteMany({});
     await Column.deleteMany({});
     await Card.deleteMany({});
+    await CustomFieldDefinition.deleteMany({});
 
     console.log('  👤 Creating default seed users...');
     const defaultPasswordHash = await bcrypt.hash('password123', 10);
@@ -32,6 +34,7 @@ async function seedDatabase() {
       email: 'admin@trilho.com',
       passwordHash: defaultPasswordHash,
       avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Danilo',
+      isVerified: true,
     });
 
     const userMaria = await User.create({
@@ -39,6 +42,7 @@ async function seedDatabase() {
       email: 'maria@trilho.com',
       passwordHash: defaultPasswordHash,
       avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria',
+      isVerified: true,
     });
 
     const userCarlos = await User.create({
@@ -46,6 +50,7 @@ async function seedDatabase() {
       email: 'carlos@trilho.com',
       passwordHash: defaultPasswordHash,
       avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos',
+      isVerified: true,
     });
 
     const membersList = [adminUser._id, userMaria._id, userCarlos._id];
@@ -56,6 +61,24 @@ async function seedDatabase() {
       description: 'Mobile application development using React Native and Next.js API',
       ownerId: adminUser._id,
       members: membersList,
+    });
+
+    const cfEnv = await CustomFieldDefinition.create({
+      boardId: board1._id,
+      name: 'Environment',
+      fieldType: 'select',
+      options: ['Production', 'Staging', 'Development'],
+      isDefault: true,
+      defaultValue: 'Production',
+    });
+
+    const cfPoints = await CustomFieldDefinition.create({
+      boardId: board1._id,
+      name: 'Story Points',
+      fieldType: 'number',
+      options: [],
+      isDefault: true,
+      defaultValue: '5',
     });
 
     const colTodo1 = await Column.create({ boardId: board1._id, title: 'To Do', order: 0 });
@@ -78,6 +101,10 @@ async function seedDatabase() {
           { id: '2', text: 'Install FCM SDK', completed: false },
           { id: '3', text: 'Test sending test notification', completed: false },
         ],
+        customFields: [
+          { fieldId: cfEnv._id, value: 'Staging' },
+          { fieldId: cfPoints._id, value: '8' },
+        ],
       },
       {
         boardId: board1._id,
@@ -92,6 +119,10 @@ async function seedDatabase() {
           { id: '1', text: 'Integrate react-native-biometrics', completed: true },
           { id: '2', text: 'Create numeric PIN fallback', completed: true },
         ],
+        customFields: [
+          { fieldId: cfEnv._id, value: 'Production' },
+          { fieldId: cfPoints._id, value: '5' },
+        ],
       },
       {
         boardId: board1._id,
@@ -105,6 +136,9 @@ async function seedDatabase() {
         checklist: [
           { id: '1', text: 'Generate certificates', completed: true },
           { id: '2', text: 'Verify automated release build', completed: true },
+        ],
+        customFields: [
+          { fieldId: cfEnv._id, value: 'Production' },
         ],
       },
     ]);

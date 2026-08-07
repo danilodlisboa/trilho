@@ -27,3 +27,7 @@ This document stores extra-code context, implicit business rules, design prefere
 - **Confirmed Member Assignee Restrictions:** Cards can only be assigned to accepted board members (owner or confirmed members), returning `400 Bad Request` if unconfirmed.
 - **No API Route Duplication:** All backend routes follow clean REST structure under `/api/boards` without creating redundant external API paths.
 - **Zero Layout Shift:** Business rules and security enhancements must preserve all UI layout behavior and styling aesthetics.
+
+### 6. Product Specification Alignment with `trilho_python`
+- **Functional Parity:** `trilho` must maintain 100% product feature and business logic alignment with `trilho_python`, including Account Email Verification, PyJWT Password Recovery, Board-Scoped Custom Fields with default auto-attachment, Datetime card deadlines, and horizontal column drag-and-drop reordering.
+- **Robust UI Preservation:** Design and UX enhancements in `trilho` are maintained as the primary design benchmark, focusing additions solely on functional capabilities and business logic constraints.

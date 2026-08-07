@@ -6,6 +6,48 @@ This document records the chronological history of features, bug fixes, architec
 
 ## 📅 2026-08-07
 
+### 🎨 Sidebar Board Custom Fields & Manage Trigger Migration (`src/components/layout/Sidebar.tsx`, `src/components/kanban/KanbanBoard.tsx`)
+- **Moved Manage Board Fields Button**: Relocated the "Manage Board Fields" trigger button from the main `KanbanBoard` canvas top bar to a dedicated **Board Fields** section in the `Sidebar`.
+- **Top 5 Custom Fields Sidebar Preview**: Rendered a preview listing the first 5 custom fields (`customFields.slice(0, 5)`) for the active board directly inside the sidebar with type tags and default indicators.
+
+### 🐛 Fix Login Alert for Unverified User Accounts (`src/app/api/auth/login-check/route.ts`, `src/app/login/page.tsx`)
+- **Login Credentials & Verification Pre-check Endpoint (`/api/auth/login-check`)**: Implemented pre-check endpoint to validate user password before inspecting `isVerified`. Returns status `403 Forbidden` with `UNVERIFIED_EMAIL` error code if credentials are correct but email is unverified.
+- **Explicit Unverified Email Alert & Inline Resend Action (`src/app/login/page.tsx`)**: Updated `LoginPage` to intercept `UNVERIFIED_EMAIL` status and display an amber warning alert (`"Account email not verified. Please check your inbox or resend verification email."`) with an instant **"Resend Activation Email"** action button instead of generic `"Invalid email or password."`.
+- **Unit Test Coverage (`src/app/api/__tests__/loginCheck.test.ts`)**: Added unit test suite for `/api/auth/login-check`.
+
+### 🚀 Full Alignment of Product Specifications & Business Logic from `trilho_python`
+- **Account Email Verification System (`src/models/User.ts`, `src/lib/tokens.ts`, `src/lib/email.ts`, `src/app/api/auth/verify-email`, `src/app/api/auth/resend-verification`)**:
+  - Added `isVerified: boolean` (default `false`) to `UserSchema` and `IUser` interface.
+  - Implemented HMAC SHA256 base64url signed token generation (24h validity) in `src/lib/tokens.ts`.
+  - Added `sendEmail` service in `src/lib/email.ts` with Resend API and SMTP sender identity (`SMTP_FROM_NAME`, `SMTP_FROM_EMAIL`, `RESEND_API_KEY`) matching `trilho_python` environment settings.
+  - Updated `src/auth.ts` to block unverified account authentication (`403 Forbidden`).
+  - Updated `src/app/api/register/route.ts` to set `isVerified: false` and dispatch an account activation link email.
+  - Created Web UI pages `/verify-email` and `/resend-verification` and updated `/login` page with resend activation links.
+  - Created integration test suite `src/app/api/__tests__/emailVerification.test.ts`.
+- **Password Recovery via Email System (`src/lib/tokens.ts`, `src/app/api/auth/forgot-password`, `src/app/api/auth/reset-password`)**:
+  - Implemented 15-minute signed JWT password reset tokens in `src/lib/tokens.ts`.
+  - Added REST API routes `/api/auth/forgot-password` and `/api/auth/reset-password`.
+  - Created Web UI pages `/forgot-password` and `/reset-password` and added "Forgot password?" link to `/login`.
+- **Board-Scoped Custom Fields Management System (`src/models/CustomFieldDefinition.ts`, `src/models/Card.ts`, `src/app/api/boards/[boardId]/custom-fields`, `src/store/useKanbanStore.ts`)**:
+  - Created `CustomFieldDefinition` model (`boardId`, `name`, `fieldType`: `'text' | 'number' | 'select' | 'date'`, `options`, `isDefault`, `defaultValue`).
+  - Embedded `customFields: [{ fieldId, value }]` in `Card` model.
+  - Enforced strict board member access check (`403 Forbidden` for non-members) and cross-board field isolation (`400 Bad Request` if field ID belongs to another board).
+  - Implemented default custom field auto-attachment on card creation (`POST /api/cards`).
+  - Created `DefaultFieldsModal.tsx` for managing board custom fields and default values.
+  - Integrated custom field value editing, attaching, and detaching in `CardDetailModal.tsx`.
+  - Rendered custom field tag badges on Kanban cards in `KanbanCard.tsx`.
+  - Added integration test suite `src/app/api/__tests__/customFields.test.ts`.
+- **Datetime Selection for Card Due Dates (`src/components/modals/CardDetailModal.tsx`, `src/components/kanban/KanbanCard.tsx`)**:
+  - Updated card modal due date control from standard date picker (`type="date"`) to HTML5 datetime picker (`type="datetime-local"`), saving date + time.
+  - Updated `KanbanCard.tsx` due date badge rendering to format date and time (e.g. `Feb 10, 14:30`).
+- **Horizontal Column Drag-and-Drop Reordering (`src/app/api/columns/reorder/route.ts`, `src/store/useKanbanStore.ts`, `src/components/kanban/KanbanBoard.tsx`, `src/components/kanban/KanbanColumn.tsx`)**:
+  - Added batch column reordering API route `POST /api/columns/reorder`.
+  - Added `moveColumnOptimistic` in Zustand store.
+  - Enabled `@hello-pangea/dnd` horizontal column drag-and-drop reordering in `KanbanBoard` and `KanbanColumn`.
+  - Added integration test suite `src/app/api/__tests__/columnsReorder.test.ts`.
+- **Database Utilities & Seeding Script Updates (`tools/seed.ts`)**:
+  - Updated `tools/seed.ts` to set `isVerified: true` for demo users and seed default custom fields (`Environment`, `Story Points`) bound to demo board.
+
 ### 🐛 TypeScript Build Fix for Card Reordering API & Navbar/Sidebar
 - **BulkWrite Operation Type Alignment (`src/app/api/cards/reorder/route.ts`)**: Resolved Next.js build type compilation error (`AnyBulkWriteOperation<ICard>`) by safely mapping `columnId` to `mongoose.Types.ObjectId` via `mongoose.Types.ObjectId.isValid()`.
 - **Session User Type Guarding (`src/components/layout/Navbar.tsx`)**: Extracted `userId` and `userEmail` constants from `session?.user` to resolve closure type narrowing error (`'session.user' is possibly 'undefined'`).

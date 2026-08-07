@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { connectToDatabase } from '@/lib/db';
 import { Card } from '@/models/Card';
 import { Board } from '@/models/Board';
+import { CustomFieldDefinition } from '@/models/CustomFieldDefinition';
 
 async function isValidAssignee(boardId: string, assigneeId: string): Promise<boolean> {
   const board = await Board.findById(boardId);
@@ -12,6 +13,16 @@ async function isValidAssignee(boardId: string, assigneeId: string): Promise<boo
   return isOwner || isMember;
 }
 
+async function validateCustomFields(boardId: string, customFields: Array<{ fieldId: string; value: string }>): Promise<boolean> {
+  if (!customFields || customFields.length === 0) return true;
+  const fieldIds = customFields.map((f) => f.fieldId);
+  const validFields = await CustomFieldDefinition.find({
+    _id: { $in: fieldIds },
+    boardId,
+  });
+  return validFields.length === fieldIds.length;
+}
+
 export async function POST(req: Request) {
   try {
     const session = await auth();
@@ -19,7 +30,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
     }
 
-    const { boardId, columnId, title, description, priority, dueDate, assigneeId } = await req.json();
+    const { boardId, columnId, title, description, priority, dueDate, assigneeId, customFields } = await req.json();
 
     if (!boardId || !columnId || !title?.trim()) {
       return NextResponse.json({ error: 'boardId, columnId and title are required.' }, { status: 400 });
@@ -34,6 +45,23 @@ export async function POST(req: Request) {
       }
     }
 
+    if (customFields && customFields.length > 0) {
+      const isValidFields = await validateCustomFields(boardId, customFields);
+      if (!isValidFields) {
+        return NextResponse.json({ error: 'Custom field does not belong to this board.' }, { status: 400 });
+      }
+    }
+
+    // Auto-attach board default custom fields if no customFields provided or merge default fields
+    let initialCustomFields = customFields || [];
+    if (!customFields) {
+      const defaultDefs = await CustomFieldDefinition.find({ boardId, isDefault: true });
+      initialCustomFields = defaultDefs.map((def) => ({
+        fieldId: def._id.toString(),
+        value: def.defaultValue || '',
+      }));
+    }
+
     const cardCount = await Card.countDocuments({ columnId });
 
     const newCard = await Card.create({
@@ -45,6 +73,7 @@ export async function POST(req: Request) {
       dueDate: dueDate ? new Date(dueDate) : null,
       assigneeId: assigneeId && assigneeId !== 'none' ? assigneeId : null,
       checklist: [],
+      customFields: initialCustomFields,
       order: cardCount,
     });
 
@@ -64,7 +93,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
     }
 
-    const { cardId, title, description, priority, dueDate, assigneeId, checklist, columnId, order } = await req.json();
+    const { cardId, title, description, priority, dueDate, assigneeId, checklist, customFields, columnId, order } = await req.json();
 
     if (!cardId) {
       return NextResponse.json({ error: 'cardId is required.' }, { status: 400 });
@@ -77,11 +106,19 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Card not found.' }, { status: 404 });
     }
 
+    const targetBoardId = existingCard.boardId.toString();
+
     if (assigneeId !== undefined && assigneeId !== null && assigneeId !== '' && assigneeId !== 'none') {
-      const targetBoardId = existingCard.boardId.toString();
       const valid = await isValidAssignee(targetBoardId, assigneeId);
       if (!valid) {
         return NextResponse.json({ error: 'Assignee must be an accepted board member.' }, { status: 400 });
+      }
+    }
+
+    if (customFields !== undefined && customFields.length > 0) {
+      const isValidFields = await validateCustomFields(targetBoardId, customFields);
+      if (!isValidFields) {
+        return NextResponse.json({ error: 'Custom field does not belong to this board.' }, { status: 400 });
       }
     }
 
@@ -94,6 +131,7 @@ export async function PUT(req: Request) {
       updateData.assigneeId = assigneeId && assigneeId !== 'none' ? assigneeId : null;
     }
     if (checklist !== undefined) updateData.checklist = checklist;
+    if (customFields !== undefined) updateData.customFields = customFields;
     if (columnId !== undefined) updateData.columnId = columnId;
     if (order !== undefined) updateData.order = order;
 

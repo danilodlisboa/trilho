@@ -32,16 +32,34 @@ export async function POST(req: Request) {
       email: normalizedEmail,
       passwordHash,
       avatarUrl,
+      isVerified: false,
     });
+
+    try {
+      const { createSignedToken } = await import('@/lib/tokens');
+      const { sendEmail } = await import('@/lib/email');
+      const token = createSignedToken({ email: normalizedEmail, type: 'verify' }, 24 * 3600);
+      const appUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+      const verifyUrl = `${appUrl}/verify-email?token=${token}`;
+
+      await sendEmail({
+        to: normalizedEmail,
+        subject: 'Verify your Trilho Account',
+        html: `<p>Hi ${name},</p><p>Please verify your Trilho account by clicking the link below:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p><p>This link expires in 24 hours.</p>`,
+      });
+    } catch (emailErr) {
+      console.error('Failed to send verification email during registration:', emailErr);
+    }
 
     return NextResponse.json(
       {
-        message: 'User registered successfully!',
+        message: 'User registered successfully! Please check your email to verify your account.',
         user: {
           id: user._id.toString(),
           name: user.name,
           email: user.email,
           avatarUrl: user.avatarUrl,
+          isVerified: false,
         },
       },
       { status: 201 }
