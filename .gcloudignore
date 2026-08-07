@@ -1,0 +1,28 @@
+# Dependencies & build output (DO NOT UPLOAD TO GCP CLOUD BUILD)
+node_modules
+.next
+coverage
+
+# Environment and local secret files
+.env
+.env.*
+.env.local
+*.pem
+*.key
+
+# Tool scripts and development tools (BLOCKED FROM REMOTE CONTAINER)
+tools/
+
+# Git and IDE configurations
+.git/
+.gitignore
+.dockerignore
+.gcloudignore
+.agents/
+.gemini/
+.idea/
+.vscode/
+
+# Docs
+docs/
+*.md
