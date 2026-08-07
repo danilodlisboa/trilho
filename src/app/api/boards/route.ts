@@ -34,7 +34,7 @@ export async function GET() {
     return NextResponse.json(boards);
   } catch (error: any) {
     console.error('Error fetching boards:', error);
-    return NextResponse.json({ error: error.message || 'Error loading boards.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error loading boards.' }, { status: 500 });
   }
 }
 
@@ -94,6 +94,6 @@ export async function POST(req: Request) {
     );
   } catch (error: any) {
     console.error('Error creating board:', error);
-    return NextResponse.json({ error: error.message || 'Error creating board.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error creating board.' }, { status: 500 });
   }
 }

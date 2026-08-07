@@ -23,10 +23,18 @@ async function validateCustomFields(boardId: string, customFields: Array<{ field
   return validFields.length === fieldIds.length;
 }
 
+async function checkBoardAccess(boardId: string, userId: string): Promise<boolean> {
+  const board = await Board.findById(boardId);
+  if (!board) return false;
+  const isOwner = board.ownerId.toString() === userId;
+  const isMember = board.members.some((m) => m.toString() === userId);
+  return isOwner || isMember;
+}
+
 export async function POST(req: Request) {
   try {
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
     }
 
@@ -37,6 +45,11 @@ export async function POST(req: Request) {
     }
 
     await connectToDatabase();
+
+    const isAuthorized = await checkBoardAccess(boardId, session.user.id);
+    if (!isAuthorized) {
+      return NextResponse.json({ error: 'Forbidden. You are not a member of this board.' }, { status: 403 });
+    }
 
     if (assigneeId && assigneeId !== 'none') {
       const valid = await isValidAssignee(boardId, assigneeId);
@@ -82,14 +95,14 @@ export async function POST(req: Request) {
     return NextResponse.json(populatedCard, { status: 201 });
   } catch (error: any) {
     console.error('Error creating card:', error);
-    return NextResponse.json({ error: error.message || 'Error creating card.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error creating card.' }, { status: 500 });
   }
 }
 
 export async function PUT(req: Request) {
   try {
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
     }
 
@@ -107,6 +120,11 @@ export async function PUT(req: Request) {
     }
 
     const targetBoardId = existingCard.boardId.toString();
+
+    const isAuthorized = await checkBoardAccess(targetBoardId, session.user.id);
+    if (!isAuthorized) {
+      return NextResponse.json({ error: 'Forbidden. You are not a member of this board.' }, { status: 403 });
+    }
 
     if (assigneeId !== undefined && assigneeId !== null && assigneeId !== '' && assigneeId !== 'none') {
       const valid = await isValidAssignee(targetBoardId, assigneeId);
@@ -143,14 +161,14 @@ export async function PUT(req: Request) {
     return NextResponse.json(updatedCard);
   } catch (error: any) {
     console.error('Error updating card:', error);
-    return NextResponse.json({ error: error.message || 'Error updating card.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error updating card.' }, { status: 500 });
   }
 }
 
 export async function DELETE(req: Request) {
   try {
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
     }
 
@@ -163,11 +181,21 @@ export async function DELETE(req: Request) {
 
     await connectToDatabase();
 
+    const existingCard = await Card.findById(cardId);
+    if (!existingCard) {
+      return NextResponse.json({ error: 'Card not found.' }, { status: 404 });
+    }
+
+    const isAuthorized = await checkBoardAccess(existingCard.boardId.toString(), session.user.id);
+    if (!isAuthorized) {
+      return NextResponse.json({ error: 'Forbidden. You are not a member of this board.' }, { status: 403 });
+    }
+
     await Card.findByIdAndDelete(cardId);
 
     return NextResponse.json({ message: 'Card deleted successfully.' });
   } catch (error: any) {
     console.error('Error deleting card:', error);
-    return NextResponse.json({ error: error.message || 'Error deleting card.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error deleting card.' }, { status: 500 });
   }
 }

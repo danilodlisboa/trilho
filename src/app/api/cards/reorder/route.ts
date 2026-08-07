@@ -3,11 +3,12 @@ import mongoose from 'mongoose';
 import { auth } from '@/auth';
 import { connectToDatabase } from '@/lib/db';
 import { Card } from '@/models/Card';
+import { Board } from '@/models/Board';
 
 export async function POST(req: Request) {
   try {
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
     }
 
@@ -18,6 +19,23 @@ export async function POST(req: Request) {
     }
 
     await connectToDatabase();
+
+    // Verify board membership for the batch reordering
+    const firstCard = await Card.findById(cards[0].id);
+    if (!firstCard) {
+      return NextResponse.json({ error: 'Card not found.' }, { status: 404 });
+    }
+
+    const board = await Board.findById(firstCard.boardId);
+    if (!board) {
+      return NextResponse.json({ error: 'Board not found.' }, { status: 404 });
+    }
+
+    const isOwner = board.ownerId.toString() === session.user.id;
+    const isMember = board.members.some((m) => m.toString() === session.user.id);
+    if (!isOwner && !isMember) {
+      return NextResponse.json({ error: 'Forbidden. You are not a member of this board.' }, { status: 403 });
+    }
 
     // Perform bulk write operation for batch card order updates
     const bulkOps = cards.map((item: { id: string; columnId: string; order: number }) => ({
@@ -39,6 +57,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'Cards reordered successfully.' });
   } catch (error: any) {
     console.error('Error reordering cards:', error);
-    return NextResponse.json({ error: error.message || 'Error reordering cards.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error reordering cards.' }, { status: 500 });
   }
 }

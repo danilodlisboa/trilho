@@ -55,7 +55,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ boardId:
     });
   } catch (error: any) {
     console.error('Error fetching board details:', error);
-    return NextResponse.json({ error: error.message || 'Error loading board details.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error loading board details.' }, { status: 500 });
   }
 }
 
@@ -98,7 +98,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ boardId:
     return NextResponse.json(updatedBoard);
   } catch (error: any) {
     console.error('Error updating board:', error);
-    return NextResponse.json({ error: error.message || 'Error updating board.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error updating board.' }, { status: 500 });
   }
 }
 
@@ -135,6 +135,6 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ board
     return NextResponse.json({ message: 'Board deleted successfully.' });
   } catch (error: any) {
     console.error('Error deleting board:', error);
-    return NextResponse.json({ error: error.message || 'Error deleting board.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error deleting board.' }, { status: 500 });
   }
 }

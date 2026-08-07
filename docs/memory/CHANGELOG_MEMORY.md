@@ -4,6 +4,15 @@ This document records the chronological history of features, bug fixes, architec
 
 ## 📅 2026-08-07
 
+### 🛡️ Fullstack Security Audit & Vulnerability Remediation Suite
+- **[SEC-01] Secure Token Secret Handling (`src/lib/tokens.ts`)**: Require `AUTH_SECRET` or `NEXTAUTH_SECRET` environment variable in production/non-test environments, removing fallback static key to prevent HMAC signature forgery.
+- **[SEC-02] Board Authorization on Column Operations (`src/app/api/columns/route.ts`, `src/app/api/columns/reorder/route.ts`)**: Enforced strict `checkBoardMember` authorization on column creation (`POST`), update (`PUT`), deletion (`DELETE`), and batch reordering (`POST /reorder`) to prevent unauthorized cross-board mutations (IDOR protection).
+- **[SEC-03] Board Authorization on Card Operations (`src/app/api/cards/route.ts`, `src/app/api/cards/reorder/route.ts`)**: Enforced `checkBoardAccess` authorization checks on card creation (`POST`), update (`PUT`), deletion (`DELETE`), and batch card reordering (`POST /reorder`).
+- **[SEC-04] User Enumeration Prevention (`src/app/api/users/route.ts`)**: Scoped `GET /api/users` endpoint to return only users sharing active boards with the requesting authenticated user.
+- **[SEC-05] Anti-Brute-Force & IP Rate Limiting (`src/lib/rateLimit.ts`, `src/app/api/auth/login-check`, `src/app/api/auth/forgot-password`, `src/app/api/auth/resend-verification`, `src/app/api/register`)**: Implemented an in-memory IP rate limiter helper (`isRateLimited`, `getClientIp`) restricting request rates on sensitive auth and email dispatch endpoints.
+- **[SEC-06] 500 Error Response Message Sanitization (`src/app/api/**`)**: Standardized error handling across all API routes to replace raw `error.message` returns with sanitized 500 status responses while preserving server logs.
+- **[SEC-07] Environment Variable Template (`.env.example`)**: Created `.env.example` template without clear-text credentials for safe onboarding and environment configuration.
+
 ### 📱 Mobile Floating Save Status Badge (`src/components/layout/Navbar.tsx`)
 - **Mobile Save Indicator Visibility**: Extracted the real-time save status badge renderer in `Navbar.tsx` and added a floating mobile save status indicator fixed at the bottom-right corner (`fixed bottom-4 right-4 z-40 md:hidden flex`). Now the 'Saved' / 'Saving...' / 'Error' / 'Synced' status pill is clearly visible on mobile screens without cluttering the header bar.
 

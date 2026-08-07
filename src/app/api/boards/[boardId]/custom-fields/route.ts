@@ -37,7 +37,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ boardId:
     return NextResponse.json(customFields);
   } catch (error: any) {
     console.error('Error fetching custom fields:', error);
-    return NextResponse.json({ error: error.message || 'Error fetching custom fields.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error fetching custom fields.' }, { status: 500 });
   }
 }
 
@@ -79,6 +79,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ boardId
     return NextResponse.json(newField, { status: 201 });
   } catch (error: any) {
     console.error('Error creating custom field:', error);
-    return NextResponse.json({ error: error.message || 'Error creating custom field.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error creating custom field.' }, { status: 500 });
   }
 }

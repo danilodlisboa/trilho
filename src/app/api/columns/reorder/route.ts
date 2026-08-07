@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { connectToDatabase } from '@/lib/db';
 import { Column } from '@/models/Column';
+import { Board } from '@/models/Board';
 
 export async function POST(req: Request) {
   try {
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
     }
 
@@ -17,6 +18,23 @@ export async function POST(req: Request) {
     }
 
     await connectToDatabase();
+
+    // Verify first column board membership to authorize reorder batch
+    const firstCol = await Column.findById(columns[0].id);
+    if (!firstCol) {
+      return NextResponse.json({ error: 'Column not found.' }, { status: 404 });
+    }
+
+    const board = await Board.findById(firstCol.boardId);
+    if (!board) {
+      return NextResponse.json({ error: 'Board not found.' }, { status: 404 });
+    }
+
+    const isOwner = board.ownerId.toString() === session.user.id;
+    const isMember = board.members.some((m) => m.toString() === session.user.id);
+    if (!isOwner && !isMember) {
+      return NextResponse.json({ error: 'Forbidden. You are not a member of this board.' }, { status: 403 });
+    }
 
     const bulkOps = columns.map((col: { id: string; order: number }) => ({
       updateOne: {
@@ -30,6 +48,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'Columns reordered successfully.' });
   } catch (error: any) {
     console.error('Error reordering columns:', error);
-    return NextResponse.json({ error: error.message || 'Error reordering columns.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error reordering columns.' }, { status: 500 });
   }
 }

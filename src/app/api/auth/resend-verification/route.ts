@@ -3,9 +3,18 @@ import { connectToDatabase } from '@/lib/db';
 import { User } from '@/models/User';
 import { createSignedToken } from '@/lib/tokens';
 import { sendEmail } from '@/lib/email';
+import { isRateLimited, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    if (isRateLimited(`resend-verification:${ip}`, 5, 60000)) {
+      return NextResponse.json(
+        { error: 'Too many verification email requests. Please try again in a minute.' },
+        { status: 429 }
+      );
+    }
+
     const { email } = await req.json();
     if (!email) {
       return NextResponse.json({ error: 'Email is required.' }, { status: 400 });
@@ -36,6 +45,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'Verification link sent! Please check your inbox.' });
   } catch (error: any) {
     console.error('Resend verification error:', error);
-    return NextResponse.json({ error: error.message || 'Error resending verification email.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error resending verification email.' }, { status: 500 });
   }
 }

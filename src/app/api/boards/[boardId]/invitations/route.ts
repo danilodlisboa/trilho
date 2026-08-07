@@ -79,6 +79,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ boardId
     return NextResponse.json(updatedBoard);
   } catch (error: any) {
     console.error('Error inviting member:', error);
-    return NextResponse.json({ error: error.message || 'Error inviting member.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error inviting member.' }, { status: 500 });
   }
 }

@@ -29,6 +29,7 @@
 - **`/src/store/useKanbanStore.ts`**: Zustand store centralizing board state, custom fields, card state, pending invitations, member management actions, filters, and save status tracking.
 - **`/src/lib/db.ts`**: Mongoose connection pooling for serverless environments.
 - **`/src/lib/tokens.ts`**: HMAC SHA256 signed token generation & verification for email verification (24h) and password reset (15m).
+- **`/src/lib/rateLimit.ts`**: IP-based in-memory rate limiting utility for sensitive authentication and API endpoints.
 - **`/src/lib/email.ts`**: Email sending service with Resend API / SMTP / dev console logger fallback.
 - **`/docs`**: Core project documentation (`ARCHITECTURE.md`, `DATABASE.md`, `AUTHENTICATION.md`, `API.md`, `TESTES.md`, `GETTING_STARTED.md`).
 

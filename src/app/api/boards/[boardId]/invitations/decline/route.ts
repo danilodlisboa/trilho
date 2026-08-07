@@ -39,6 +39,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ boardId
     return NextResponse.json({ message: 'Invitation declined successfully.' });
   } catch (error: any) {
     console.error('Error declining invitation:', error);
-    return NextResponse.json({ error: error.message || 'Error declining invitation.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error declining invitation.' }, { status: 500 });
   }
 }

@@ -62,6 +62,6 @@ export async function DELETE(
     return NextResponse.json(updatedBoard);
   } catch (error: any) {
     console.error('Error removing member:', error);
-    return NextResponse.json({ error: error.message || 'Error removing member.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error removing member.' }, { status: 500 });
   }
 }

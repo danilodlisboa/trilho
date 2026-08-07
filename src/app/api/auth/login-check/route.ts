@@ -2,9 +2,18 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { connectToDatabase } from '@/lib/db';
 import { User } from '@/models/User';
+import { isRateLimited, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    if (isRateLimited(`login-check:${ip}`, 10, 60000)) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again in a minute.' },
+        { status: 429 }
+      );
+    }
+
     const { email, password } = await req.json();
 
     if (!email || !password) {
@@ -37,6 +46,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   } catch (error: any) {
     console.error('Login check error:', error);
-    return NextResponse.json({ error: error.message || 'Error checking login credentials.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error checking login credentials.' }, { status: 500 });
   }
 }

@@ -2,9 +2,18 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { connectToDatabase } from '@/lib/db';
 import { User } from '@/models/User';
+import { isRateLimited, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    if (isRateLimited(`register:${ip}`, 5, 60000)) {
+      return NextResponse.json(
+        { error: 'Too many registration attempts. Please try again in a minute.' },
+        { status: 429 }
+      );
+    }
+
     const { name, email, password } = await req.json();
 
     if (!name || !email || !password) {
@@ -66,6 +75,6 @@ export async function POST(req: Request) {
     );
   } catch (error: any) {
     console.error('Registration error:', error);
-    return NextResponse.json({ error: error.message || 'Error registering user.' }, { status: 500 });
+    return NextResponse.json({ error: 'Error registering user.' }, { status: 500 });
   }
 }
