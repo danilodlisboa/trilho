@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import { auth } from '@/auth';
 import { connectToDatabase } from '@/lib/db';
 import { Card } from '@/models/Card';
@@ -24,7 +25,9 @@ export async function POST(req: Request) {
         filter: { _id: item.id },
         update: {
           $set: {
-            columnId: item.columnId,
+            columnId: mongoose.Types.ObjectId.isValid(item.columnId)
+              ? new mongoose.Types.ObjectId(item.columnId)
+              : (item.columnId as unknown as mongoose.Types.ObjectId),
             order: item.order,
           },
         },

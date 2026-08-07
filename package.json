@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "db:seed": "tsx tools/seed.ts",
-    "db:clean": "tsx tools/clean.ts"
+    "db:clean": "tsx tools/clean.ts",
+    "deploy:gcp": "tsx tools/deploy_gcp.ts"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",

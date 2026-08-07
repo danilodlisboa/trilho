@@ -4,7 +4,25 @@ This document records the chronological history of features, bug fixes, architec
 
 ---
 
+## 📅 2026-08-07
+
+### 🐛 TypeScript Build Fix for Card Reordering API & Navbar/Sidebar
+- **BulkWrite Operation Type Alignment (`src/app/api/cards/reorder/route.ts`)**: Resolved Next.js build type compilation error (`AnyBulkWriteOperation<ICard>`) by safely mapping `columnId` to `mongoose.Types.ObjectId` via `mongoose.Types.ObjectId.isValid()`.
+- **Session User Type Guarding (`src/components/layout/Navbar.tsx`)**: Extracted `userId` and `userEmail` constants from `session?.user` to resolve closure type narrowing error (`'session.user' is possibly 'undefined'`).
+- **Sidebar Key Union Type Safety (`src/components/layout/Sidebar.tsx`)**: Resolved React JSX key type error (`Type 'string | IUserRef' is not assignable to type 'Key | null | undefined'`) by safely discriminating `member` in `typeof member === 'string'` union before extracting `memberId`, `memberName`, `memberEmail`, and `avatarUrl`.
+- **Excluded CLI Tools from Build (`tsconfig.json`, `tools/clean.ts`)**: Added `"tools"` to the `"exclude"` list in `tsconfig.json` so CLI management scripts (`tools/clean.ts`, `tools/seed.ts`, `tools/deploy_gcp.ts`) are not included in Next.js production build checks. Added strict null-guarding for `mongoose.connection.db` in `tools/clean.ts`.
+- **Unauthenticated Session & Page Guarding (`src/app/dashboard/page.tsx`, `src/app/board/[id]/page.tsx`, `src/store/useKanbanStore.ts`)**: Added `useSession()` status checks to `/dashboard` and `/board/[id]` pages and `isLoadingBoards` to Zustand store. If `status === 'unauthenticated'` or an API returns `401 Unauthorized`, unauthenticated users are immediately redirected to `/login` without ever flashing or rendering the "Create New Board" screen.
+- **Fast DB Timeout & Connection Error State (`src/lib/db.ts`, `src/store/useKanbanStore.ts`, `src/app/dashboard/page.tsx`)**: Configured `serverSelectionTimeoutMS: 5000` and `dbName` in Mongoose connection options to fail fast on database connection issues instead of hanging for 30s. Added `fetchError` state and interactive **"Retry Connection"** button on `/dashboard` if database connection fails.
+
+---
+
 ## 📅 2026-08-03
+
+### 🚀 Node.js GCP Cloud Run Deployment Script
+- **TypeScript Deployment CLI (`tools/deploy_gcp.ts`)**: Implemented a GCP Cloud Run deployment script in Node/TypeScript matching Python's `deploy_gcp.py` behavior.
+- **Environment & Interactive Prompts**: Reads environment variables from `.env.local` / `.env` via `dotenv`, overrides `NODE_ENV` / `ENVIRONMENT` to `production` and `ENABLE_SEED_ENDPOINT` to `false`, and interactively prompts for `GCP_PROJECT_ID` and `GCP_REGION` with defaults.
+- **Distinct Service / Container Name**: Configured Cloud Run deployment to target container/service name `trilho-next` (distinct from Python's `trilho-app`), customizable via `GCP_CONTAINER_NAME` or `GCP_SERVICE_NAME`.
+- **Package Script**: Added `"deploy:gcp": "tsx tools/deploy_gcp.ts"` to `package.json`.
 
 ### 🔐 Ported Business Rules, Security Authorization & Invitation System from `trilho_python`
 - **Strict Board Owner Authorization**: Enforced owner identity check on `GET /api/boards/[boardId]` (403 for non-members), `PUT /api/boards/[boardId]` (403 for non-owners), and `DELETE /api/boards/[boardId]` (403 for non-owners, with cascade column and card deletion).

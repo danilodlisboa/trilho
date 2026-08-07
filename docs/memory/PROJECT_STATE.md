@@ -1,6 +1,6 @@
 # 📌 Current Project State (PROJECT_STATE.md)
 
-**Last Updated:** 2026-08-03
+**Last Updated:** 2026-08-07
 
 ---
 
@@ -22,7 +22,7 @@
 - **`/src/app/board/[id]`**: Main interactive Kanban Board page.
 - **`/src/app/dashboard`**: Workspace redirect & overview.
 - **`/src/app/login` & `/src/app/register`**: Authentication pages.
-- **`/tools`**: External database management CLI scripts (`tools/seed.ts` via `npm run db:seed` and `tools/clean.ts` via `npm run db:clean`).
+- **`/tools`**: CLI management & deployment scripts (`tools/seed.ts` via `npm run db:seed`, `tools/clean.ts` via `npm run db:clean`, and `tools/deploy_gcp.ts` via `npm run deploy:gcp`).
 - **`/src/components/kanban`**: Components `KanbanBoard`, `KanbanColumn`, `KanbanCard` & unit tests in `__tests__`.
 - **`/src/components/modals`**: Modals for card details (`CardDetailModal`) and board creation (`CreateBoardModal`) & unit tests in `__tests__`.
 - **`/src/store/useKanbanStore.ts`**: Zustand store centralizing board state, card state, pending invitations, member management actions, filters, and save status tracking.

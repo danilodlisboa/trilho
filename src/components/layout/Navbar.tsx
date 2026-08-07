@@ -65,11 +65,14 @@ export default function Navbar() {
     }
   };
 
-  const isOwner = activeBoard && session?.user
+  const userId = session?.user?.id;
+  const userEmail = session?.user?.email;
+
+  const isOwner = activeBoard && userId
     ? (typeof activeBoard.ownerId === 'string'
-        ? activeBoard.ownerId === session.user.id
-        : (activeBoard.ownerId as any)?._id === session.user.id) ||
-      (activeBoard.members && activeBoard.members.some((m) => m.email === session.user.email && (activeBoard.ownerId === m._id || (activeBoard.ownerId as any)?._id === m._id)))
+        ? activeBoard.ownerId === userId
+        : (activeBoard.ownerId as any)?._id === userId) ||
+      (activeBoard.members && activeBoard.members.some((m) => m.email === userEmail && (activeBoard.ownerId === m._id || (activeBoard.ownerId as any)?._id === m._id)))
     : false;
 
   const boardMembers = activeBoard?.members || users;

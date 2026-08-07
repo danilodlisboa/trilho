@@ -2,9 +2,13 @@ import { create } from 'zustand';
 import { signOut } from 'next-auth/react';
 
 const checkUnauthorized = (res: Response) => {
-  if (res.status === 401 || res.status === 404) {
+  if (res.status === 401) {
     if (typeof window !== 'undefined') {
-      signOut({ callbackUrl: '/login' });
+      signOut({ callbackUrl: '/login' }).then(() => {
+        window.location.href = '/login';
+      }).catch(() => {
+        window.location.href = '/login';
+      });
     }
     return true;
   }
@@ -73,6 +77,8 @@ interface KanbanStoreState {
   users: IUserRef[];
 
   // UI State
+  isLoadingBoards: boolean;
+  fetchError: string | null;
   saveStatus: SaveStatus;
   saveStatusMessage: string;
   searchQuery: string;
@@ -128,6 +134,8 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
   cards: [],
   users: [],
 
+  isLoadingBoards: true,
+  fetchError: null,
   saveStatus: 'idle',
   saveStatusMessage: 'Idle',
   searchQuery: '',
@@ -143,19 +151,27 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
   setIsCreateBoardModalOpen: (isOpen) => set({ isCreateBoardModalOpen: isOpen }),
 
   fetchBoards: async () => {
+    set({ isLoadingBoards: true, fetchError: null });
     try {
       const res = await fetch('/api/boards');
       if (res.ok) {
         const boards = await res.json();
-        set({ boards });
+        set({ boards, isLoadingBoards: false, fetchError: null });
         if (boards.length > 0 && !get().activeBoard) {
           get().fetchBoardDetails(boards[0]._id);
         }
       } else {
-        checkUnauthorized(res);
+        const isUnauth = checkUnauthorized(res);
+        if (!isUnauth) {
+          const errData = await res.json().catch(() => ({}));
+          set({ isLoadingBoards: false, fetchError: errData.error || 'Failed to load workspace boards.' });
+        } else {
+          set({ isLoadingBoards: false });
+        }
       }
     } catch (err) {
       console.error('Failed to fetch boards:', err);
+      set({ isLoadingBoards: false, fetchError: 'Database connection error. Please try again.' });
     }
   },
 

@@ -32,6 +32,8 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
   if (!cached!.promise) {
     const opts = {
       bufferCommands: false,
+      dbName: process.env.DATABASE_NAME || 'trilho_db',
+      serverSelectionTimeoutMS: 5000,
     };
 
     cached!.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {

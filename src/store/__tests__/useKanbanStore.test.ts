@@ -9,6 +9,8 @@ describe('useKanbanStore Unit Tests', () => {
       columns: [],
       cards: [],
       users: [],
+      isLoadingBoards: true,
+      fetchError: null,
       saveStatus: 'idle',
       saveStatusMessage: 'Idle',
       searchQuery: '',

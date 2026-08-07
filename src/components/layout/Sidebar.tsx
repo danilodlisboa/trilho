@@ -71,11 +71,14 @@ export default function Sidebar() {
     }
   };
 
-  const isOwnerActive = activeBoard && session?.user
+  const userId = session?.user?.id;
+  const userEmail = session?.user?.email;
+
+  const isOwnerActive = activeBoard && userId
     ? (typeof activeBoard.ownerId === 'string'
-        ? activeBoard.ownerId === session.user.id
-        : (activeBoard.ownerId as any)?._id === session.user.id) ||
-      (activeBoard.members && activeBoard.members.some((m) => m.email === session.user.email && (activeBoard.ownerId === m._id || (activeBoard.ownerId as any)?._id === m._id)))
+        ? activeBoard.ownerId === userId
+        : (activeBoard.ownerId as any)?._id === userId) ||
+      (activeBoard.members && activeBoard.members.some((m) => m.email === userEmail && (activeBoard.ownerId === m._id || (activeBoard.ownerId as any)?._id === m._id)))
     : false;
 
   return (
@@ -136,11 +139,11 @@ export default function Sidebar() {
           <div className="space-y-1">
             {boards.map((b) => {
               const isActive = activeBoard?._id === b._id;
-              const isOwner = session?.user
+              const isOwner = userId
                 ? (typeof b.ownerId === 'string'
-                    ? b.ownerId === session.user.id
-                    : (b.ownerId as any)?._id === session.user.id) ||
-                  (b.members && b.members.some((m) => m.email === session.user.email && (b.ownerId === m._id || (b.ownerId as any)?._id === m._id)))
+                    ? b.ownerId === userId
+                    : (b.ownerId as any)?._id === userId) ||
+                  (b.members && b.members.some((m) => m.email === userEmail && (b.ownerId === m._id || (b.ownerId as any)?._id === m._id)))
                 : false;
 
               return (
@@ -278,26 +281,30 @@ export default function Sidebar() {
             {/* Members List */}
             <div className="space-y-1.5 px-2">
               {activeBoard.members.map((member) => {
-                const memberId = member._id || member;
+                const memberId = typeof member === 'string' ? member : member._id;
                 const isMemberOwner = typeof activeBoard.ownerId === 'string'
                   ? activeBoard.ownerId === memberId
                   : (activeBoard.ownerId as any)?._id === memberId;
 
+                const avatarUrl = typeof member === 'string' ? undefined : member.avatarUrl;
+                const memberName = typeof member === 'string' ? undefined : member.name;
+                const memberEmail = typeof member === 'string' ? member : member.email;
+
                 return (
                   <div key={memberId} className="group flex items-center justify-between py-1">
                     <div className="flex items-center gap-2.5 truncate">
-                      {member.avatarUrl ? (
+                      {avatarUrl ? (
                         <img
-                          src={member.avatarUrl}
-                          alt={member.name}
+                          src={avatarUrl}
+                          alt={memberName || memberEmail}
                           className="w-6 h-6 rounded-full border border-slate-700 object-cover"
                         />
                       ) : (
                         <div className="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold text-[10px] flex items-center justify-center">
-                          {member.name ? member.name.charAt(0).toUpperCase() : 'M'}
+                          {memberName ? memberName.charAt(0).toUpperCase() : 'M'}
                         </div>
                       )}
-                      <span className="text-xs text-slate-300 truncate">{member.name || member.email}</span>
+                      <span className="text-xs text-slate-300 truncate">{memberName || memberEmail}</span>
                       {isMemberOwner && (
                         <span className="text-[9px] px-1 bg-indigo-500/20 text-indigo-400 rounded border border-indigo-500/30">
                           Owner

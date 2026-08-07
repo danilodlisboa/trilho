@@ -12,6 +12,9 @@ async function cleanDatabase() {
   await mongoose.connect(MONGODB_URI);
 
   try {
+    if (!mongoose.connection.db) {
+      throw new Error('Database connection not established.');
+    }
     const collections = await mongoose.connection.db.collections();
     for (const collection of collections) {
       await collection.deleteMany({});
