@@ -22,21 +22,22 @@ export async function POST(req: Request) {
 
     const userId = session.user?.id;
 
-    // Verify board membership for the batch reordering
-    const firstCard = await Card.findById(cards[0].id);
-    if (!firstCard) {
-      return NextResponse.json({ error: 'Card not found.' }, { status: 404 });
+    // Verify board membership for ALL cards in the batch reordering request to prevent IDOR
+    const cardIds = cards.map((c: { id: string }) => c.id).filter(Boolean);
+    const existingCards = await Card.find({ _id: { $in: cardIds } });
+
+    if (existingCards.length !== cardIds.length) {
+      return NextResponse.json({ error: 'One or more cards were not found.' }, { status: 404 });
     }
 
-    const board = await Board.findById(firstCard.boardId);
-    if (!board) {
-      return NextResponse.json({ error: 'Board not found.' }, { status: 404 });
-    }
+    const uniqueBoardIds = Array.from(new Set(existingCards.map((c) => c.boardId.toString())));
+    const authorizedBoards = await Board.find({
+      _id: { $in: uniqueBoardIds },
+      $or: [{ ownerId: userId }, { members: userId }],
+    });
 
-    const isOwner = board.ownerId.toString() === userId;
-    const isMember = board.members.some((m) => m.toString() === userId);
-    if (!isOwner && !isMember) {
-      return NextResponse.json({ error: 'Forbidden. You are not a member of this board.' }, { status: 403 });
+    if (authorizedBoards.length !== uniqueBoardIds.length) {
+      return NextResponse.json({ error: 'Forbidden. One or more cards do not belong to your boards.' }, { status: 403 });
     }
 
     // Perform bulk write operation for batch card order updates

@@ -4,6 +4,27 @@ This document records the chronological history of features, bug fixes, architec
 
 ## 📅 2026-08-11
 
+### 📜 System Protocol Update (`AGENTS.md`, `docs/memory/USER_DIRECTIVES.md`)
+- **[RULE-01 Mandatory Test Execution & Coverage Directive] Registered Core Testing Protocol ([AGENTS.md](file:///c:/Users/Danilo/code/trilho/AGENTS.md), [USER_DIRECTIVES.md](file:///c:/Users/Danilo/code/trilho/docs/memory/USER_DIRECTIVES.md))**: Formally registered project directive:
+  1. Whenever implementing a new feature or significant bug fix/correction, automated tests MUST be executed.
+  2. If tests do not exist for the new functionality or modified code path, corresponding tests MUST be implemented.
+  3. The AI agent MUST collect and analyze test results.
+  4. If any test fails, the agent MUST evaluate the root cause and fix the code and/or tests iteratively until 100% test success is achieved before declaring the task complete.
+
+### 🧪 Playwright Board & Card E2E Test Suite (`e2e/board-card.spec.ts`)
+- **[E2E-02 Board & Card Operations E2E Suite] Modularized Playwright End-to-End Workflow Tests ([e2e/board-card.spec.ts](file:///c:/Users/Danilo/code/trilho/e2e/board-card.spec.ts))**: Separated and executed 4 distinct automated browser test cases (100% PASS - 6/6 tests passed in 18.6s):
+  1. `create boards`: Modal opening, title/description input, and board navigation.
+  2. `edit boards`: Header title click, in-place edit input (`header input.bg-slate-800`), and Enter key save.
+  3. `create cards`: Column `"Add Card"` trigger, title input, and card element verification in Column 1.
+  4. `edit cards`: Card modal detail edit (`Card Title...` / `Add a detailed description...`), auto-save on blur, and Escape key close.
+
+### 🛡️ Full Security Remediation & Test Suite (`src/app/api/`, `src/lib/`, `src/app/api/__tests__/`)
+- **[SEC-22 Security Audit & Remediation] Fixed All 4 Security Vulnerability Categories**:
+  - **IDOR & Batch Authorization**: Enforced bulk database query and board membership validation for ALL items in `POST /api/cards/reorder` ([cards/reorder/route.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/cards/reorder/route.ts)) and `POST /api/columns/reorder` ([columns/reorder/route.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/columns/reorder/route.ts)), returning `403 Forbidden` if any item belongs to an unauthorized board.
+  - **Secret Exposure Prevention**: Removed `console.log(DATABASE_URI)` leaking credentials in [db.ts](file:///c:/Users/Danilo/code/trilho/src/lib/db.ts). Removed static test key fallback in [tokens.ts](file:///c:/Users/Danilo/code/trilho/src/lib/tokens.ts) and configured environment variable in [vitest.setup.ts](file:///c:/Users/Danilo/code/trilho/vitest.setup.ts).
+  - **Input Validation & Sanitization**: Added strict regex email format validation, name length boundaries, and HTML escaping in [register/route.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/register/route.ts). Added `priority` enum whitelist check (`'high' | 'medium' | 'low'`) and string length limits in [cards/route.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/cards/route.ts).
+  - **Automated Test Coverage**: Added security unit test cases and reconciled model mocks (`Board.findById`, `CustomFieldDefinition.find`, `Column.findById`, `User.findOne`) in [cardsReorder.test.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/__tests__/cardsReorder.test.ts), [columnsReorder.test.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/__tests__/columnsReorder.test.ts), [register.test.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/__tests__/register.test.ts), [cards.test.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/__tests__/cards.test.ts), [columns.test.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/__tests__/columns.test.ts), and [users.test.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/__tests__/users.test.ts).
+
 ### 📚 Complete Documentation Audit & Alignment (`docs/`, `README.md`)
 - **[DOC-01 Complete Documentation Audit & Alignment] Reconciled All Docs (`README.md`, `docs/API.md`, `docs/ARCHITECTURE.md`, `docs/AUTHENTICATION.md`, `docs/DATABASE.md`, `docs/GETTING_STARTED.md`, `docs/TESTES.md`)**:
   - Removed stale reference to deleted `/api/seed` endpoint in `docs/API.md`, `README.md`, and `docs/TESTES.md`.

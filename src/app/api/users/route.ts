@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import { auth } from '@/auth';
 import { connectToDatabase } from '@/lib/db';
 import { User } from '@/models/User';
@@ -13,9 +14,19 @@ export async function GET() {
 
     await connectToDatabase();
 
-    const dbUser = await User.findOne({
-      $or: [{ _id: session.user.id }, { email: session.user.email?.toLowerCase() }],
-    });
+    const queryOr: any[] = [];
+    if (session.user?.id && mongoose.Types.ObjectId.isValid(session.user.id)) {
+      queryOr.push({ _id: session.user.id });
+    }
+    if (session.user?.email) {
+      queryOr.push({ email: session.user.email.toLowerCase() });
+    }
+
+    if (queryOr.length === 0) {
+      return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+    }
+
+    const dbUser = await User.findOne({ $or: queryOr });
 
     if (!dbUser) {
       return NextResponse.json({ error: 'Unauthorized. User not found in database.' }, { status: 401 });

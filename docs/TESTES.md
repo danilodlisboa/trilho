@@ -25,7 +25,8 @@ Tests are co-located with their corresponding modules in `__tests__` subdirector
 
 ```
 e2e/
-└── login.spec.ts                       # Playwright E2E browser authentication & navigation suite
+├── login.spec.ts                       # Playwright E2E browser authentication & navigation suite (2 tests)
+└── board-card.spec.ts                  # Playwright E2E operations suite: create boards, edit boards, create cards, edit cards (4 tests)
 src/
 ├── app/
 │   └── api/

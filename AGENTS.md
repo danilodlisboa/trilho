@@ -14,9 +14,10 @@ At each session start, task initialization, or new turn, the agent **MUST** exec
    - Read user directives in [`docs/memory/USER_DIRECTIVES.md`](docs/memory/USER_DIRECTIVES.md).
    - Read recent changes history in [`docs/memory/CHANGELOG_MEMORY.md`](docs/memory/CHANGELOG_MEMORY.md).
 
-2. **Context Validation:**
+2. **Context Validation & Testing Directive:**
    - Ensure all code modifications and documentation adhere strictly to business rules in `USER_DIRECTIVES.md`.
    - **Relative Paths Rule:** NEVER write or commit absolute file paths in documentation, code, or memory logs. Always use clean relative paths.
+   - **Mandatory Test Execution & Coverage Rule:** Whenever implementing a new feature or significant bug fix/correction, tests MUST be executed (`npm run test` / `npm run test:e2e`). If tests do not exist for the new or modified code, they MUST be implemented. The agent MUST inspect test results, and if any test fails, evaluate and fix the code and/or tests iteratively until 100% pass before declaring task completion.
 
 ---
 

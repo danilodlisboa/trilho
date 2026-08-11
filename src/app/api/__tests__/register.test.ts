@@ -41,7 +41,20 @@ describe('POST /api/register API Route Unit Tests', () => {
     const data = await res.json();
 
     expect(res.status).toBe(400);
-    expect(data.error).toBe('Password must be at least 6 characters.');
+    expect(data.error).toBe('Password must be between 6 and 128 characters.');
+  });
+
+  it('returns 400 when email format is invalid', async () => {
+    const req = new Request('http://localhost/api/register', {
+      method: 'POST',
+      body: JSON.stringify({ name: 'Test User', email: 'invalid-email-string', password: 'password123' }),
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toBe('Invalid email format.');
   });
 
   it('returns 400 when email is already registered', async () => {

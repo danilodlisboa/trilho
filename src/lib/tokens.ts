@@ -3,9 +3,6 @@ import crypto from 'crypto';
 function getSecretKey(): string {
   const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
   if (!secret) {
-    if (process.env.NODE_ENV === 'test') {
-      return 'trilho-secret-key-development';
-    }
     throw new Error('AUTH_SECRET or NEXTAUTH_SECRET environment variable is not defined.');
   }
   return secret;

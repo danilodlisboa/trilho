@@ -21,21 +21,22 @@ export async function POST(req: Request) {
 
     const userId = session.user?.id;
 
-    // Verify first column board membership to authorize reorder batch
-    const firstCol = await Column.findById(columns[0].id);
-    if (!firstCol) {
-      return NextResponse.json({ error: 'Column not found.' }, { status: 404 });
+    // Verify board membership for ALL columns in the batch reordering request to prevent IDOR
+    const colIds = columns.map((c: { id: string }) => c.id).filter(Boolean);
+    const existingCols = await Column.find({ _id: { $in: colIds } });
+
+    if (existingCols.length !== colIds.length) {
+      return NextResponse.json({ error: 'One or more columns were not found.' }, { status: 404 });
     }
 
-    const board = await Board.findById(firstCol.boardId);
-    if (!board) {
-      return NextResponse.json({ error: 'Board not found.' }, { status: 404 });
-    }
+    const uniqueBoardIds = Array.from(new Set(existingCols.map((c) => c.boardId.toString())));
+    const authorizedBoards = await Board.find({
+      _id: { $in: uniqueBoardIds },
+      $or: [{ ownerId: userId }, { members: userId }],
+    });
 
-    const isOwner = board.ownerId.toString() === userId;
-    const isMember = board.members.some((m) => m.toString() === userId);
-    if (!isOwner && !isMember) {
-      return NextResponse.json({ error: 'Forbidden. You are not a member of this board.' }, { status: 403 });
+    if (authorizedBoards.length !== uniqueBoardIds.length) {
+      return NextResponse.json({ error: 'Forbidden. One or more columns do not belong to your boards.' }, { status: 403 });
     }
 
     const bulkOps = columns.map((col: { id: string; order: number }) => ({

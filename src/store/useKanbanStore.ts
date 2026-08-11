@@ -614,7 +614,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
   fetchCustomFields: async (boardId: string) => {
     try {
       const res = await fetch(`/api/boards/${boardId}/custom-fields`);
-      if (res.ok) {
+      if (res?.ok) {
         const customFields = await res.json();
         set({ customFields });
       }

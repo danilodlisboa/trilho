@@ -16,29 +16,37 @@ export async function POST(req: Request) {
 
     const { name, email, password } = await req.json();
 
-    if (!name || !email || !password) {
+    if (!name?.trim() || !email?.trim() || !password) {
       return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
     }
 
-    if (password.length < 6) {
-      return NextResponse.json({ error: 'Password must be at least 6 characters.' }, { status: 400 });
+    const trimmedName = name.trim().slice(0, 100);
+    const trimmedEmail = email.trim().toLowerCase().slice(0, 255);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return NextResponse.json({ error: 'Invalid email format.' }, { status: 400 });
+    }
+
+    if (password.length < 6 || password.length > 128) {
+      return NextResponse.json({ error: 'Password must be between 6 and 128 characters.' }, { status: 400 });
     }
 
     await connectToDatabase();
 
-    const normalizedEmail = email.toLowerCase();
-    const existingUser = await User.findOne({ email: normalizedEmail });
+    const existingUser = await User.findOne({ email: trimmedEmail });
 
     if (existingUser) {
       return NextResponse.json({ error: 'This email is already registered.' }, { status: 400 });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
+    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(trimmedName)}`;
+    const safeHtmlName = trimmedName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     const user = await User.create({
-      name,
-      email: normalizedEmail,
+      name: trimmedName,
+      email: trimmedEmail,
       passwordHash,
       avatarUrl,
       isVerified: false,
@@ -48,14 +56,14 @@ export async function POST(req: Request) {
       const { createSignedToken } = await import('@/lib/tokens');
       const { sendEmail } = await import('@/lib/email');
       const { getAppUrl } = await import('@/lib/getAppUrl');
-      const token = createSignedToken({ email: normalizedEmail, type: 'verify' }, 24 * 3600);
+      const token = createSignedToken({ email: trimmedEmail, type: 'verify' }, 24 * 3600);
       const appUrl = getAppUrl(req);
       const verifyUrl = `${appUrl}/verify-email?token=${token}`;
 
       await sendEmail({
-        to: normalizedEmail,
+        to: trimmedEmail,
         subject: 'Verify your Trilho Account',
-        html: `<p>Hi ${name},</p><p>Please verify your Trilho account by clicking the link below:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p><p>This link expires in 24 hours.</p>`,
+        html: `<p>Hi ${safeHtmlName},</p><p>Please verify your Trilho account by clicking the link below:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p><p>This link expires in 24 hours.</p>`,
       });
     } catch (emailErr) {
       console.error('Failed to send verification email during registration:', emailErr);

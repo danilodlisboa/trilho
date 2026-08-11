@@ -31,3 +31,9 @@ This document stores extra-code context, implicit business rules, design prefere
 ### 6. Product Specification Alignment with `trilho_python`
 - **Functional Parity:** `trilho` must maintain 100% product feature and business logic alignment with `trilho_python`, including Account Email Verification, PyJWT Password Recovery, Board-Scoped Custom Fields with default auto-attachment, Datetime card deadlines, and horizontal column drag-and-drop reordering.
 - **Robust UI Preservation:** Design and UX enhancements in `trilho` are maintained as the primary design benchmark, focusing additions solely on functional capabilities and business logic constraints.
+
+### 7. Mandatory Test Implementation, Execution & Verification Protocol
+- **Always Test Code Changes:** Whenever implementing any new feature, architecture refactoring, or significant bug fix/correction, automated tests MUST be executed (`npm run test` for Vitest unit/integration tests and/or `npm run test:e2e` for Playwright browser E2E tests).
+- **Mandatory Test Coverage:** If automated tests do not exist for the new functionality or modified code path, corresponding unit, API, or E2E tests MUST be written and implemented.
+- **Collect & Evaluate Results:** The agent MUST inspect test execution logs and outputs.
+- **Iterative Debugging Until Success:** If any test fails, the agent MUST evaluate the root cause, fix the code and/or the test assertions, and re-run until 100% test success is achieved before declaring the task finished.

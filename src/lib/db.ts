@@ -33,8 +33,7 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
       connectTimeoutMS: 5000,
     };
 
-    console.log(`DATABASE_URI: ${mongodbUri}`);
-    console.log(`DATABASE_NAME: ${process.env.DATABASE_NAME}`);
+
 
     cached!.promise = mongoose.connect(mongodbUri, opts).then((mongooseInstance) => {
       return mongooseInstance;

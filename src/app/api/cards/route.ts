@@ -58,6 +58,11 @@ export async function POST(req: Request) {
       }
     }
 
+    const validPriorities = ['high', 'medium', 'low'];
+    if (priority && !validPriorities.includes(priority)) {
+      return NextResponse.json({ error: 'Invalid priority. Must be high, medium, or low.' }, { status: 400 });
+    }
+
     if (customFields && customFields.length > 0) {
       const isValidFields = await validateCustomFields(boardId, customFields);
       if (!isValidFields) {
@@ -140,9 +145,14 @@ export async function PUT(req: Request) {
       }
     }
 
+    const validPriorities = ['high', 'medium', 'low'];
+    if (priority !== undefined && !validPriorities.includes(priority)) {
+      return NextResponse.json({ error: 'Invalid priority. Must be high, medium, or low.' }, { status: 400 });
+    }
+
     const updateData: any = {};
-    if (title !== undefined) updateData.title = title;
-    if (description !== undefined) updateData.description = description;
+    if (title !== undefined) updateData.title = String(title).trim().slice(0, 250);
+    if (description !== undefined) updateData.description = String(description).slice(0, 2000);
     if (priority !== undefined) updateData.priority = priority;
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
     if (assigneeId !== undefined) {
