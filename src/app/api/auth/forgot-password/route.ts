@@ -28,8 +28,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'If the email exists, password reset instructions have been sent.' });
     }
 
+    const { getAppUrl } = await import('@/lib/getAppUrl');
     const token = createSignedToken({ email: normalizedEmail, type: 'reset' }, 15 * 60); // 15 mins
-    const appUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const appUrl = getAppUrl(req);
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
     await sendEmail({

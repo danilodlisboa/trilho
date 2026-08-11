@@ -32,8 +32,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'Account is already verified. You can log in.' });
     }
 
+    const { getAppUrl } = await import('@/lib/getAppUrl');
     const token = createSignedToken({ email: normalizedEmail, type: 'verify' }, 24 * 3600);
-    const appUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const appUrl = getAppUrl(req);
     const verifyUrl = `${appUrl}/verify-email?token=${token}`;
 
     await sendEmail({

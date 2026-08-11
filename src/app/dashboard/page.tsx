@@ -13,12 +13,16 @@ export default function DashboardPage() {
   const { boards, isLoadingBoards, fetchError, fetchBoards, activeBoard, setIsCreateBoardModalOpen } = useKanbanStore();
 
   useEffect(() => {
+    let timer: NodeJS.Timeout;
     if (status === 'unauthenticated') {
-      window.location.href = '/login';
+      timer = setTimeout(() => {
+        router.replace('/login');
+      }, 500);
     } else if (status === 'authenticated') {
       fetchBoards();
     }
-  }, [status, fetchBoards]);
+    return () => clearTimeout(timer);
+  }, [status, fetchBoards, router]);
 
   useEffect(() => {
     if (status === 'authenticated' && !isLoadingBoards && !fetchError && boards.length > 0) {

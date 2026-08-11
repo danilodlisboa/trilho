@@ -64,6 +64,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      const isProd = process.env.NODE_ENV === 'production';
+
+      if (!isProd) {
+        try {
+          const parsedUrl = new URL(url, baseUrl);
+          if (parsedUrl.host.includes('trilho.online')) {
+            const localHost = 'http://localhost:3000';
+            return `${localHost}${parsedUrl.pathname}${parsedUrl.search}`;
+          }
+          if (parsedUrl.host.includes('localhost') || parsedUrl.host.includes('127.0.0.1')) {
+            return parsedUrl.toString();
+          }
+          return `http://localhost:3000${parsedUrl.pathname}${parsedUrl.search}`;
+        } catch {
+          return 'http://localhost:3000/dashboard';
+        }
+      }
+
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      else if (new URL(url).origin === new URL(baseUrl).origin) return url;
+      return baseUrl;
+    },
   },
   pages: {
     signIn: '/login',

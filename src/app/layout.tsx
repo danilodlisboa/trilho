@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import './globals.css';
 import AuthProvider from '@/components/providers/AuthProvider';
 
@@ -7,7 +8,9 @@ export const metadata: Metadata = {
   description: 'Fullstack NoSQL Kanban management system built with Next.js, Zustand, and MongoDB',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const nonce = (await headers()).get('x-nonce') || undefined;
+
   return (
     <html lang="en">
       <body className="antialiased bg-slate-950 text-slate-100">

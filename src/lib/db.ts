@@ -17,7 +17,7 @@ if (!cached) {
 }
 
 export async function connectToDatabase(): Promise<typeof mongoose> {
-  if (cached!.conn) {
+  if (cached!.conn && mongoose.connection.readyState === 1) {
     return cached!.conn;
   }
 
@@ -26,15 +26,21 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     throw new Error('MONGODB_URI environment variable is not defined.');
   }
 
-  if (!cached!.promise) {
+  if (!cached!.promise || mongoose.connection.readyState === 0) {
     const opts = {
-      bufferCommands: false,
-      dbName: process.env.DATABASE_NAME || 'trilho_db',
+      dbName: process.env.DATABASE_NAME || 'test',
       serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000,
     };
+
+    console.log(`DATABASE_URI: ${mongodbUri}`);
+    console.log(`DATABASE_NAME: ${process.env.DATABASE_NAME}`);
 
     cached!.promise = mongoose.connect(mongodbUri, opts).then((mongooseInstance) => {
       return mongooseInstance;
+    }).catch((err) => {
+      cached!.promise = null;
+      throw err;
     });
   }
 

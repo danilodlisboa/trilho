@@ -47,8 +47,9 @@ export async function POST(req: Request) {
     try {
       const { createSignedToken } = await import('@/lib/tokens');
       const { sendEmail } = await import('@/lib/email');
+      const { getAppUrl } = await import('@/lib/getAppUrl');
       const token = createSignedToken({ email: normalizedEmail, type: 'verify' }, 24 * 3600);
-      const appUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+      const appUrl = getAppUrl(req);
       const verifyUrl = `${appUrl}/verify-email?token=${token}`;
 
       await sendEmail({

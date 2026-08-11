@@ -47,21 +47,24 @@ export default function LoginPage() {
       }
 
       // If credentials and verification are valid, proceed to NextAuth signIn
-      const res = await signIn('credentials', {
+      const res = (await signIn('credentials', {
         email,
         password,
-        redirect: false,
-      });
+        callbackUrl: '/dashboard',
+        redirect: true,
+      })) as any;
 
       if (res?.error) {
         setError('Invalid email or password.');
-      } else {
-        router.push('/dashboard');
-        router.refresh();
+        setIsLoading(false);
       }
-    } catch {
+    } catch (err: any) {
+      if (err?.digest?.startsWith?.('NEXT_REDIRECT') || err?.message?.includes?.('NEXT_REDIRECT')) {
+        window.location.href = '/dashboard';
+        return;
+      }
+      console.error('Login submit error:', err);
       setError('Error signing in. Please try again.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -157,7 +160,7 @@ export default function LoginPage() {
               <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="email"
-                placeholder="admin@trilho.com"
+                placeholder="admin@trilho.online"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -197,17 +200,11 @@ export default function LoginPage() {
         </form>
 
         {/* Footer Navigation */}
-        <div className="mt-6 pt-6 border-t border-slate-800 text-center space-y-2">
+        <div className="mt-6 pt-6 border-t border-slate-800 text-center">
           <p className="text-xs text-slate-400">
             Don't have an account?{' '}
             <Link href="/register" className="text-blue-400 font-semibold hover:underline">
               Register here
-            </Link>
-          </p>
-          <p className="text-xs text-slate-400">
-            Need activation email?{' '}
-            <Link href="/resend-verification" className="text-blue-400 font-semibold hover:underline">
-              Resend verification email
             </Link>
           </p>
         </div>
