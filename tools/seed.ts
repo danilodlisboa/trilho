@@ -31,7 +31,7 @@ async function seedDatabase() {
 
     const adminUser = await User.create({
       name: 'Danilo Silva (Admin)',
-      email: 'admin@trilho.com',
+      email: 'admin@trilho.online',
       passwordHash: defaultPasswordHash,
       avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Danilo',
       isVerified: true,
@@ -45,15 +45,7 @@ async function seedDatabase() {
       isVerified: true,
     });
 
-    const userCarlos = await User.create({
-      name: 'Carlos Souza',
-      email: 'carlos@trilho.com',
-      passwordHash: defaultPasswordHash,
-      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos',
-      isVerified: true,
-    });
-
-    const membersList = [adminUser._id, userMaria._id, userCarlos._id];
+    const membersList = [adminUser._id, userMaria._id];
 
     console.log('  📱 Creating Board 1: Trilho Mobile App...');
     const board1 = await Board.create({
@@ -94,7 +86,7 @@ async function seedDatabase() {
         description: 'Configure Firebase Cloud Messaging (FCM) service and handle permissions.',
         priority: 'high',
         dueDate: new Date(Date.now() + 86400000 * 3),
-        assigneeId: adminUser._id,
+        assigneeId: userMaria._id,
         order: 0,
         checklist: [
           { id: '1', text: 'Register app in Firebase Console', completed: true },
@@ -164,7 +156,7 @@ async function seedDatabase() {
         description: 'Add query performance compound indexes for boardId and columnId on cards.',
         priority: 'high',
         dueDate: new Date(Date.now() + 86400000 * 1),
-        assigneeId: adminUser._id,
+        assigneeId: userMaria._id,
         order: 0,
         checklist: [{ id: '1', text: 'Add compound index to CardSchema', completed: true }],
       },
@@ -175,7 +167,7 @@ async function seedDatabase() {
         description: 'Handle customer.subscription.created and updated webhook events.',
         priority: 'medium',
         dueDate: new Date(Date.now() + 86400000 * 10),
-        assigneeId: userCarlos._id,
+        assigneeId: userMaria._id,
         order: 0,
         checklist: [],
       },
@@ -183,7 +175,7 @@ async function seedDatabase() {
 
     console.log('\n✨ Database seeded successfully!');
     console.log('🔑 Credentials to log in:');
-    console.log('   - Email:    admin@trilho.com');
+    console.log('   - Email:    admin@trilho.online');
     console.log('   - Password: password123');
   } catch (error) {
     console.error('❌ Error seeding database:', error);
