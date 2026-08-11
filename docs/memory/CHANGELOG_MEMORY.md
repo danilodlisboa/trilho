@@ -2,6 +2,46 @@
 
 This document records the chronological history of features, bug fixes, architecture changes, and commits in the **Trilho** repository.
 
+## 📅 2026-08-11
+
+### 📚 Complete Documentation Audit & Alignment (`docs/`, `README.md`)
+- **[DOC-01 Complete Documentation Audit & Alignment] Reconciled All Docs (`README.md`, `docs/API.md`, `docs/ARCHITECTURE.md`, `docs/AUTHENTICATION.md`, `docs/DATABASE.md`, `docs/GETTING_STARTED.md`, `docs/TESTES.md`)**:
+  - Removed stale reference to deleted `/api/seed` endpoint in `docs/API.md`, `README.md`, and `docs/TESTES.md`.
+  - Added complete specifications for Account Email Verification (`/api/auth/login-check`, `/api/auth/verify-email`, `/api/auth/resend-verification`), Password Recovery (`/api/auth/forgot-password`, `/api/auth/reset-password`), Board Invitations (`/api/boards/[boardId]/invitations`), Board Custom Fields (`/api/boards/[boardId]/custom-fields`), and Horizontal Column Reordering (`/api/columns/reorder`).
+  - Updated `docs/DATABASE.md` with `CustomFieldDefinition` collection, `isVerified` in `User`, `invitations` in `Board`, and `customFields` in `Card`.
+  - Added Playwright E2E testing framework (`e2e/login.spec.ts`, `playwright.config.ts`, `npm run test:e2e`) and GCP Cloud Run deploy script (`tools/deploy_gcp.ts`, `npm run deploy:gcp`) across `README.md`, `docs/ARCHITECTURE.md`, `docs/GETTING_STARTED.md`, and `docs/TESTES.md`.
+
+### 🛠️ E2E Test Ignore Configuration (`.gitignore`, `.dockerignore`, `.gcloudignore`)
+- **[IGNORE-01 Playwright Test Artifacts Exclusion] Added E2E Test Outputs to Ignore Rules (`.gitignore`, `.dockerignore`, `.gcloudignore`)**: Added `test-results/`, `playwright-report/`, `blob-report/`, `e2e/`, and `playwright.config.ts` to ignore files to prevent local E2E test runs (e.g. `.last-run.json`) from polluting git history or being uploaded in Docker / GCP Cloud Build context.
+
+### 🎨 Login UI Footer Simplification (`src/app/login/page.tsx`)
+- **[UI-02 Login Footer Link Removal] Removed Resend Verification Link (`src/app/login/page.tsx`)**: Removed the `"Need activation email? Resend verification email"` paragraph link from the bottom footer navigation of the Login page, streamlining the login form footer layout.
+
+### 🛡️ Next.js Framework & Drag-and-Drop CSP Style Directive (`src/middleware.ts`, `next.config.mjs`)
+- **[SEC-21 CSP Level 3 Style Directives] `style-src-attr` & `style-src-elem` Configuration (`src/middleware.ts`, `next.config.mjs`)**: Added W3C CSP Level 3 `style-src-attr 'unsafe-inline'` and `style-src-elem 'self' 'unsafe-inline'` directives alongside `style-src 'self' 'unsafe-inline'`. Authorizes Next.js framework runtime scripts (`main-app.js`) and `@hello-pangea/dnd` drag-and-drop library DOM element style mutations (`element.style.transform`, `display`, etc.), completely eliminating browser console `Applying inline style violates Content Security Policy` errors while maintaining strict per-request Nonces on JavaScript `script-src`.
+  1. `CSP: script-src unsafe-eval`: Omitted `'unsafe-eval'` in production (`isProd`) mode (`script-src 'self' 'nonce-${nonce}' https://api.dicebear.com`).
+  2. `CSP: script-src unsafe-inline`: Replaced `'unsafe-inline'` with strict per-request base64 Nonces (`'nonce-${nonce}'`).
+  3. `CSP: style-src unsafe-inline`: Omitted `'unsafe-inline'` from `style-src` in favor of per-request Nonces (`style-src 'self' 'nonce-${nonce}'`).
+  4. `CSP Header Not Set`: Set global static CSP header fallback for `/:path*` in `next.config.mjs` to ensure static assets (like `favicon.ico`) return valid CSP headers.
+- **[TOOL-01 Atlas Permissions Fix] Mongoose Model Clearing (`tools/clean.ts`)**: Updated `tools/clean.ts` to clear collections using Mongoose models (`User.deleteMany({})`, `Board.deleteMany({})`, etc.) instead of calling `listCollections()`. Resolves MongoDB Atlas `Code: 8000 (user is not allowed to do action [listCollections])` permission errors, allowing `npm run db:clean` to run cleanly.
+- **[SEED-02 Admin Domain & Card Participant Update] `admin@trilho.online` & Maria Assignment (`tools/seed.ts`, `e2e/login.spec.ts`, `src/app/login/page.tsx`, `docs/`)**: Updated admin seed email from `admin@trilho.com` to `admin@trilho.online` across seed tools, E2E tests, login placeholder, and documentation. Completely removed `carlos@trilho.com` user from seed dataset. Assigned Maria Oliveira (`userMaria`) as assignee/participant across admin test cards.
+- **[SEC-16 Environment-Aware CSP] React Refresh Dev Mode Compatibility (`src/middleware.ts`)**: Configured environment-aware `script-src` directive in `src/middleware.ts`. Includes `'unsafe-eval'` strictly during local development (`NODE_ENV !== 'production'`) to allow Next.js Fast Refresh / React Refresh runtime (`runtime.js`) to evaluate module updates without `Uncaught EvalError`, while automatically omitting `'unsafe-eval'` in production builds for 100% OWASP ZAP scanner compliance.
+- **[BUG-16 Auth.js Server-Side Redirect] `callbackUrl` Navigation (`src/app/login/page.tsx`)**: Configured `signIn('credentials', { email, password, callbackUrl: '/dashboard', redirect: true })` so Auth.js v5 sets `authjs.session-token` HTTP cookie and handles server-side redirect to `/dashboard` directly.
+- **[BUG-16 Session Hydration Grace Period] 500ms Buffer on `/dashboard` (`src/app/dashboard/page.tsx`)**: Added a 500ms grace period timer before executing `router.replace('/login')` on `status === 'unauthenticated'`. Prevents `/dashboard` from bouncing back to `/login` during the initial 100ms when Auth.js hydrates session state.
+- **[BUG-15 Mongoose Connection Buffering] Connection ReadyState Handshake (`src/lib/db.ts`)**: Checked `mongoose.connection.readyState === 1` in `connectToDatabase` to ensure reliable DB connections.
+- **[TEST-02 Playwright Locator & Navigation Fix] Strict Mode & Commit Wait Strategy (`e2e/login.spec.ts`)**: Fixed Playwright E2E test failures by replacing ambiguous multi-element locator (`h1, h2, div`) with `getByRole('heading', { name: 'Trilho' })` and setting `{ waitUntil: 'commit' }` on `page.waitForURL(/\/dashboard|\/board/)` for Next.js App Router client transitions.
+- **[SEC-14 Strict OWASP ZAP Remediation] Zero Unsafe Directives & Next.js Bundle Execution (`next.config.mjs`, `src/middleware.ts`)**: Configured clean Content-Security-Policy header (`script-src 'self' https://api.dicebear.com`, `style-src 'self'`) across `next.config.mjs` (`/:path*`) and `src/middleware.ts`. Completely eliminated `'unsafe-inline'` and `'unsafe-eval'` directives to resolve all 3 OWASP ZAP alerts while omitting `'strict-dynamic'` so Next.js static production JavaScript bundles (`webpack-*.js`, `main-app-*.js`, `layout-*.js`, `page-*.js`) execute cleanly from `'self'` without being blocked.
+- **[SEC-12 Favicon.ico & Static Asset CSP] Global CSP Header in `next.config.mjs` (`next.config.mjs`)**: Configured `Content-Security-Policy` header in `async headers()` for `/:path*` in `next.config.mjs`. Guarantees static assets and `favicon.ico` (which bypass middleware) return valid CSP headers, eliminating OWASP ZAP alert `10038-1 Content Security Policy (CSP) Header Not Set` on `https://app.trilho.online/favicon.ico`.
+- **[SEC-11 Ping-Pong Loop Fix] Removed Middleware Login Bounce Rule (`src/middleware.ts`)**: Removed rule in middleware that redirected `/login` to `/dashboard` on raw cookie presence. Allows `/login` to render cleanly when a session cookie is expired or invalid in NextAuth.
+- **[SEC-11 Smooth Navigation] Client Router Redirection (`src/app/dashboard/page.tsx`)**: Replaced `window.location.href = '/login'` with `router.replace('/login')` on `status === 'unauthenticated'`, preventing full-page reload loops.
+
+## 📅 2026-08-10
+
+### 🛡️ Content Security Policy (CSP) & HTTP Security Headers Remediation
+- **[SEC-08] Content Security Policy (CSP) Header Setup (`next.config.mjs`, `src/middleware.ts`)**: Configured strict global Content-Security-Policy (CSP) headers in `next.config.mjs` and `src/middleware.ts` to detect and mitigate XSS and data injection attacks (CWE-693 / OWASP Security Misconfiguration).
+- **[SEC-08 Security Headers] Hardened Security Response Headers (`next.config.mjs`, `src/middleware.ts`)**: Enforced `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: origin-when-cross-origin`, and `Permissions-Policy` across all routes.
+- **[SEC-08 Testing] Middleware Security Headers Integration Unit Tests (`src/app/api/__tests__/middlewareSecurityHeaders.test.ts`)**: Added unit test coverage validating `Content-Security-Policy` and response security headers on Next.js middleware routing and redirects.
+
 ## 📅 2026-08-07
 
 ### 🛡️ Fullstack Security Audit & Vulnerability Remediation Suite

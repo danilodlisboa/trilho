@@ -13,20 +13,24 @@
 
 ## ✨ Key Features
 
-- 🔒 **Authentication & Security**: User registration, JWT login with `bcryptjs`, and protected routes via Next.js Middleware.
-- 📋 **Custom Boards**: Create, edit, and delete project boards with member management.
-- 🗂️ **Flexible Columns**: 4 default columns ("To Do", "In Progress", "In Review", "Done") with support for custom columns.
-- 🎯 **Interactive Cards & Drag-and-Drop**: Drag cards between columns and reorder within columns with batch persistence in MongoDB via `@hello-pangea/dnd`.
-- ⚡ **Optimistic Updates**: Reactive state via **Zustand** reflecting instant UI updates.
+- 🔒 **Authentication & Security**: User registration, JWT login with `bcryptjs`, protected routes via Next.js Middleware, Strict Nonce Content Security Policy (CSP), and HTTP security response headers.
+- ✉️ **Account Email Verification**: Email token verification workflow (24h validity) with activation email dispatch and unverified login guards.
+- 🔑 **Password Recovery**: Self-service password recovery via 15-minute signed reset tokens dispatched by email.
+- 📋 **Custom Boards & Invitations**: Create, edit, and delete project boards (owner authorized), with email invitations, pending invitation approval workflow, and confirmed member assignee restrictions.
+- 🏷️ **Board-Scoped Custom Fields**: Create board-scoped custom fields (text, number, select, date) with auto-attachment on card creation, card modal editing, and card tag badges.
+- 🗂️ **Flexible Columns & Horizontal Reordering**: 4 default columns ("To Do", "In Progress", "In Review", "Done") with custom column support and horizontal column drag-and-drop reordering (`POST /api/columns/reorder`).
+- 🎯 **Interactive Cards & Drag-and-Drop**: Drag cards between columns and reorder vertically/horizontally via `@hello-pangea/dnd`.
+- ⚡ **Optimistic Updates**: Reactive state via **Zustand** reflecting instant UI updates and save status indicators.
 - 📝 **Detailed Card Modal**:
   - Inline title & description editing.
   - Priority selector (🔴 High, 🟡 Medium, 🟢 Low).
-  - Due date indicator (highlighted red when overdue).
+  - Datetime due date selector (`datetime-local`) formatted on card badges.
+  - Custom field values manager.
   - **Interactive Checklist** with progress percentage (`2/5 completed`).
-  - Team member assignment.
+  - Confirmed team member assignment.
 - 🔍 **Real-Time Filters & Search**: Search cards by keyword and filter by priority or assignee.
-- 🎨 **Modern Interface**: Sleek aesthetics and glassmorphism styling.
-- 🌱 **Instant Seed Data**: Seed route to populate MongoDB with demo boards, columns, and tasks for immediate testing.
+- 🎨 **Modern Interface**: Sleek aesthetics with Slate/Blue/Indigo palette and glassmorphism styling.
+- 🛠️ **CLI Seeding & Cleaning**: Node/TypeScript CLI management tools (`npm run db:seed`, `npm run db:clean`).
 
 ---
 
@@ -42,32 +46,39 @@ trilho/
 │   │   └── USER_DIRECTIVES.md   # User preferences & extra-code context
 │   ├── ARCHITECTURE.md          # Architecture overview & data flow
 │   ├── DATABASE.md              # MongoDB Schemas & Mongoose relationships
-│   ├── AUTHENTICATION.md        # Auth.js v5 setup & Middleware guard
+│   ├── AUTHENTICATION.md        # Auth.js v5 setup, token verification & Middleware
 │   ├── API.md                   # Detailed REST API endpoints documentation
-│   ├── TESTES.md                # Fullstack Vitest & React Testing Library guide
+│   ├── TESTES.md                # Fullstack Vitest & Playwright E2E testing guide
 │   └── GETTING_STARTED.md       # Installation & local environment guide
-├── tools/                       # Database management scripts (seed, clean)
+├── e2e/                         # Playwright End-to-End tests
+│   └── login.spec.ts            # E2E test suite for auth & navigation
+├── tools/                       # CLI management scripts (seed, clean, deploy)
 │   ├── seed.ts                  # Database seeder script
-│   └── clean.ts                 # Database cleaner script
+│   ├── clean.ts                 # Database cleaner script
+│   └── deploy_gcp.ts            # GCP Cloud Run deployment script
 ├── src/
 │   ├── app/                     # Next.js App Router (Routes & Server API Routes)
 │   │   ├── api/                 # REST Endpoints (auth, boards, columns, cards, users)
 │   │   ├── board/[id]/          # Main Kanban Board page
-│   │   ├── dashboard/           # Workspace redirect & overview
+│   │   ├── dashboard/           # Workspace overview
 │   │   ├── login/               # Authentication / Login page
 │   │   ├── register/            # User Registration page
+│   │   ├── verify-email/        # Email verification confirmation page
+│   │   ├── resend-verification/ # Resend verification email request page
+│   │   ├── forgot-password/     # Password reset request page
+│   │   ├── reset-password/      # New password entry page
 │   │   ├── globals.css          # Global styles & CSS utilities
 │   │   └── layout.tsx           # Root Layout with AuthProvider
 │   ├── components/
 │   │   ├── kanban/              # Kanban components (Board, Column, Card)
 │   │   ├── layout/              # Navbar and Sidebar navigation
-│   │   ├── modals/              # Modals (Card Details, Create Board)
+│   │   ├── modals/              # Modals (Card Details, Create Board, Board Fields)
 │   │   └── providers/           # Auth Session Provider
-│   ├── lib/                     # Utilities (MongoDB connection)
-│   ├── models/                  # Mongoose Schemas (User, Board, Column, Card)
+│   ├── lib/                     # Utilities (MongoDB, tokens, rate limiter, email)
+│   ├── models/                  # Mongoose Schemas (User, Board, Column, Card, CustomFieldDefinition)
 │   ├── store/                   # Zustand Store with Optimistic Updates
-│   └── middleware.ts            # Protected Route Guard
-├── prompt.md                    # Original project specification
+│   └── middleware.ts            # Route Guard Middleware & Strict Nonce CSP
+├── playwright.config.ts         # Playwright E2E configuration
 ├── package.json                 # Dependencies and npm scripts
 └── README.md                    # Central repository documentation
 ```
@@ -112,12 +123,16 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 5. Running Unit Tests
+### 5. Running Tests
 
-Run the fullstack unit test suite (Vitest + React Testing Library):
+Run fullstack unit tests (Vitest + React Testing Library) or E2E tests (Playwright):
 
 ```bash
+# Run unit test suite
 npm run test
+
+# Run Playwright End-to-End tests
+npm run test:e2e
 ```
 
 ### 6. Database Seeding & Cleaning Tools
@@ -125,7 +140,7 @@ npm run test
 Populate MongoDB with default demo data or reset collections using external CLI tools:
 
 ```bash
-# Seed default demo data (creates admin@trilho.com)
+# Seed default demo data (creates admin@trilho.online)
 npm run db:seed
 
 # Clean all collections from the database
@@ -133,7 +148,7 @@ npm run db:clean
 ```
 
 **Default Credentials:**
-- **Email:** `admin@trilho.com`
+- **Email:** `admin@trilho.online`
 - **Password:** `password123`
 
 ---

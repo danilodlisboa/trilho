@@ -32,13 +32,19 @@ Make sure you have the following installed:
 
 Create a file named `.env.local` in the project root (`/.env.local`) with the following content:
 
-> ⚠️ **Required:** All environment variables below are mandatory.
+> ⚠️ **Required:** `MONGODB_URI` and `AUTH_SECRET` are mandatory.
 
 ```env
 MONGODB_URI=mongodb://localhost:27017/trilho
 AUTH_SECRET=generate-a-secure-secret-key-here
 AUTH_TRUST_HOST=true
 NEXTAUTH_URL=http://localhost:3000
+
+# Optional: Resend API / SMTP Configuration for real email dispatch
+# (If omitted, emails will log to local development console)
+RESEND_API_KEY=re_...
+SMTP_FROM_NAME=Trilho
+SMTP_FROM_EMAIL=no-reply@trilho.online
 ```
 
 > **Tip:** Generate a secure `AUTH_SECRET` using `openssl rand -base64 32`.
@@ -59,7 +65,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🧪 5. Testing & Running Unit Tests
+## 🧪 5. Testing & Running Test Suites
 
 ### Automated Unit Tests (Vitest + React Testing Library)
 Run unit tests for components, Zustand store, Mongoose models, and Next.js 15 API routes:
@@ -75,15 +81,31 @@ npm run test:watch
 npm run test:coverage
 ```
 
+### End-to-End Tests (Playwright)
+Run browser end-to-end user flows in chromium:
+
+```bash
+# Run Playwright E2E tests
+npm run test:e2e
+```
+
 See [`docs/TESTES.md`](TESTES.md) for full testing documentation and architecture.
 
 ### Database CLI Tools (Seeding & Cleaning)
 To seed demo data or clear all collections in MongoDB, run the CLI tools located in `tools/`:
 
 ```bash
-# Seed initial demo datasets and admin account (admin@trilho.com / password123)
+# Seed initial demo datasets and admin account (admin@trilho.online / password123)
 npm run db:seed
 
 # Clear all collections from MongoDB
 npm run db:clean
 ```
+
+### GCP Cloud Run Deployment Tool
+To deploy the application container to GCP Cloud Run:
+
+```bash
+npm run deploy:gcp
+```
+

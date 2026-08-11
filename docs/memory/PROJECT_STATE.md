@@ -1,11 +1,11 @@
 # 📌 Current Project State (PROJECT_STATE.md)
 
-**Last Updated:** 2026-08-07
+**Last Updated:** 2026-08-11
 
 ---
 
 ## 🚀 System Overview
-**Trilho** is a fullstack NoSQL Kanban project management system built with reactive architecture, strict security authorization, board invitation workflows, confirmed member assignee restrictions, account email verification, password recovery, board-scoped custom fields auto-attachment, horizontal column reordering, and optimistic local state updates. Entirely localized in English.
+**Trilho** is a fullstack NoSQL Kanban project management system built with reactive architecture, strict security authorization, board invitation workflows, confirmed member assignee restrictions, account email verification, password recovery, board-scoped custom fields auto-attachment, horizontal column reordering, Strict Nonce-based Content Security Policy (CSP) protection, and optimistic local state updates. Entirely localized in English.
 
 ## 🛠️ Current Tech Stack
 - **Framework:** Next.js v15.1 (App Router)
@@ -13,10 +13,10 @@
 - **UI & Styling:** Tailwind CSS v3.4 + `lucide-react`
 - **Local State & Optimistic UI:** Zustand v5.0
 - **Database & ODM:** MongoDB v7+ via Mongoose v8.9
-- **Authentication:** Auth.js v5 (`@auth/nextjs`) + `bcryptjs` + Signed Tokens (HMAC SHA256)
+- **Authentication & Security:** Auth.js v5 (`@auth/nextjs`) + `bcryptjs` + Signed Tokens (HMAC SHA256) + Strict Nonce Content Security Policy (CSP) & HTTP Security Headers (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`)
 - **Email Dispatch:** Resend API / SMTP with local console fallback
 - **Drag-and-Drop:** `@hello-pangea/dnd` v18.0.1 (React 19 compatible)
-- **Testing Framework:** Vitest + React Testing Library + JSDOM
+- **Testing Framework:** Vitest + React Testing Library + JSDOM (Unit/Integration) & Playwright (E2E)
 
 ## 📂 Key Modules & Component Map
 - **`/src/app/api`**: REST Endpoints (`/api/register`, `/api/auth/verify-email`, `/api/auth/resend-verification`, `/api/auth/forgot-password`, `/api/auth/reset-password`, `/api/users`, `/api/boards`, `/api/boards/[boardId]/custom-fields`, `/api/columns`, `/api/columns/reorder`, `/api/cards`) & integration tests in `/src/app/api/__tests__`.
