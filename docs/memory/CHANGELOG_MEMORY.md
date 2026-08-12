@@ -2,6 +2,22 @@
 
 This document records the chronological history of features, bug fixes, architecture changes, and commits in the **Trilho** repository.
 
+## 📅 2026-08-12
+
+### 🎨 Board UI, Column Reordering & Card Detail Local Save Flow (`src/components/kanban/`, `src/components/modals/`, `src/store/`)
+- **[UI-03 Column Width Compactness] Updated Column Width to `w-60` (`src/components/kanban/KanbanColumn.tsx`, `src/components/kanban/KanbanBoard.tsx`, `e2e/board-card.spec.ts`)**: Reduced Kanban column width from `w-80` to `w-60` across `KanbanColumn`, the "Add Column" button box, and Playwright E2E locators for a cleaner, more compact visual presentation.
+- **[BUG-17 Column Reordering Fix for Trailing Columns] Droppable Boundaries & Store Sorting (`src/store/useKanbanStore.ts`, `src/components/kanban/KanbanBoard.tsx`)**:
+  - Updated `moveColumnOptimistic` in Zustand store to sort `columns` by `order` prior to splicing, ensuring UI index matches store index.
+  - Extracted "Add New Column" box outside `@hello-pangea/dnd` `<Droppable>` container in `KanbanBoard.tsx`, resolving layout dimension calculation glitches when dragging trailing columns (columns 6-9).
+- **[FEAT-07 Card Modal Local State & Optional Checklist Flow] Explicit Save & Close Button, Unsaved Close Guard & Optional Checklist (`src/components/modals/CardDetailModal.tsx`, `src/components/modals/__tests__/CardDetailModal.test.tsx`, `e2e/board-card.spec.ts`)**:
+  - Made the Sub-tasks Checklist optional. Cards without sub-tasks hide the checklist list and input form, rendering an `+ Add Sub-tasks Checklist` button.
+  - Clicking `+ Add Sub-tasks Checklist` reveals the checklist header, item list, and "Add sub-task..." input form. A detach icon in the header allows removing the checklist.
+  - Converted card detail editing (title, description, priority, due date, assignee, custom fields, checklist) to local state committed on **Save & Close**.
+  - Preserved backdrop overlay clicking and Escape key handlers with unsaved changes confirmation guard (`confirm(...)`).
+- **[TEST-03 Unit & E2E Verification] 100% Automated Test Suite Passing (`vitest.setup.ts`, `src/components/modals/__tests__/CardDetailModal.test.tsx`, `e2e/board-card.spec.ts`)**:
+  - Added `next/navigation` mock to `vitest.setup.ts`.
+  - Updated `CardDetailModal` unit tests and Playwright E2E tests for Save button interaction and close confirmation dialog (97/97 Vitest unit tests & 9/9 Playwright E2E tests passing).
+
 ## 📅 2026-08-11
 
 ### 🛡️ Full LGPD Compliance Suite Implementation (`docs/LGPD.md`, `src/app/`, `e2e/profile-privacy.spec.ts`)

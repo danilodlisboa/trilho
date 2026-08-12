@@ -75,7 +75,7 @@ test.describe('Board & Card Operations E2E Tests', () => {
   test('create cards', async ({ page }) => {
     await loginAndGoToBoard(page);
 
-    const firstColumn = page.locator('div.w-80').first();
+    const firstColumn = page.locator('div.w-60').first();
     await firstColumn.waitFor({ state: 'visible', timeout: 15000 });
 
     const addCardBtn = firstColumn.locator('button:has-text("Add Card")');
@@ -98,7 +98,7 @@ test.describe('Board & Card Operations E2E Tests', () => {
   test('edit cards', async ({ page }) => {
     await loginAndGoToBoard(page);
 
-    const firstColumn = page.locator('div.w-80').first();
+    const firstColumn = page.locator('div.w-60').first();
     await firstColumn.waitFor({ state: 'visible', timeout: 15000 });
 
     // Ensure at least one card exists in column 1
@@ -122,14 +122,13 @@ test.describe('Board & Card Operations E2E Tests', () => {
     const updatedDesc = 'Descrição atualizada pelo teste E2E';
 
     await modalTitleInput.fill(updatedTitle);
-    await modalTitleInput.blur();
 
     const modalDescTextarea = page.locator('textarea[placeholder="Add a detailed description..."]');
     await modalDescTextarea.fill(updatedDesc);
-    await modalDescTextarea.blur();
 
-    // Close modal
-    await page.keyboard.press('Escape');
+    // Save & Close changes
+    const saveAndCloseBtn = page.locator('button[title="Save & Close"]');
+    await saveAndCloseBtn.click();
     await page.waitForTimeout(500);
 
     // Verify updated title is rendered on the board

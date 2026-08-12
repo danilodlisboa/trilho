@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useKanbanStore, IChecklistItem, ICustomFieldValue } from '@/store/useKanbanStore';
+import { useKanbanStore, IChecklistItem, ICustomFieldValue, ICardData } from '@/store/useKanbanStore';
 import {
   X,
   Trash2,
@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Circle,
   Tag,
+  Save,
 } from 'lucide-react';
 
 export default function CardDetailModal() {
@@ -32,6 +33,7 @@ export default function CardDetailModal() {
   const [priority, setPriority] = useState<'high' | 'medium' | 'low'>('medium');
   const [dueDate, setDueDate] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
+  const [hasChecklist, setHasChecklist] = useState(false);
   const [checklist, setChecklist] = useState<IChecklistItem[]>([]);
   const [newChecklistText, setNewChecklistText] = useState('');
   const [cardCustomFields, setCardCustomFields] = useState<ICustomFieldValue[]>([]);
@@ -62,47 +64,100 @@ export default function CardDetailModal() {
           : selectedCardModal.assigneeId || '';
       setAssigneeId(aId);
 
-      setChecklist(selectedCardModal.checklist || []);
+      const loadedChecklist = selectedCardModal.checklist || [];
+      setChecklist(loadedChecklist);
+      setHasChecklist(loadedChecklist.length > 0);
       setCardCustomFields(selectedCardModal.customFields || []);
     }
   }, [selectedCardModal]);
 
-  if (!selectedCardModal) return null;
+  // Derive initial state values for dirty checking
+  const initialAssigneeId =
+    typeof selectedCardModal?.assigneeId === 'object' && selectedCardModal?.assigneeId
+      ? selectedCardModal.assigneeId._id
+      : selectedCardModal?.assigneeId || '';
 
-  const handleTitleBlur = () => {
-    if (title.trim() && title !== selectedCardModal.title) {
-      updateCard(selectedCardModal._id, { title: title.trim() });
+  let initialDueDate = '';
+  if (selectedCardModal?.dueDate) {
+    const d = new Date(selectedCardModal.dueDate);
+    initialDueDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+  }
+
+  const initialHasChecklist = Boolean(
+    selectedCardModal?.checklist && selectedCardModal.checklist.length > 0
+  );
+
+  const isDirty = Boolean(
+    selectedCardModal &&
+      (title !== (selectedCardModal.title || '') ||
+        description !== (selectedCardModal.description || '') ||
+        priority !== (selectedCardModal.priority || 'medium') ||
+        dueDate !== initialDueDate ||
+        assigneeId !== initialAssigneeId ||
+        hasChecklist !== initialHasChecklist ||
+        JSON.stringify(hasChecklist ? checklist : []) !== JSON.stringify(selectedCardModal.checklist || []) ||
+        JSON.stringify(cardCustomFields) !== JSON.stringify(selectedCardModal.customFields || []))
+  );
+
+  const handleClose = () => {
+    if (isDirty) {
+      const confirmClose = window.confirm(
+        'You have unsaved changes. Are you sure you want to close without saving?'
+      );
+      if (!confirmClose) return;
     }
+    setSelectedCardModal(null);
   };
 
-  const handleDescriptionBlur = () => {
-    if (description !== selectedCardModal.description) {
-      updateCard(selectedCardModal._id, { description });
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedCardModal) {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isDirty, selectedCardModal]);
+
+  if (!selectedCardModal) return null;
+
+  const handleSaveAndClose = async () => {
+    if (!selectedCardModal) return;
+    if (isDirty) {
+      const updates: Partial<ICardData> = {
+        title: title.trim(),
+        description,
+        priority,
+        dueDate: dueDate ? dueDate : null,
+        assigneeId: assigneeId || null,
+        checklist: hasChecklist ? checklist : [],
+        customFields: cardCustomFields,
+      };
+      await updateCard(selectedCardModal._id, updates);
     }
+    setSelectedCardModal(null);
   };
 
   const handlePriorityChange = (newPriority: 'high' | 'medium' | 'low') => {
     setPriority(newPriority);
-    updateCard(selectedCardModal._id, { priority: newPriority });
   };
 
   const handleDueDateChange = (newDate: string) => {
     setDueDate(newDate);
-    updateCard(selectedCardModal._id, { dueDate: newDate ? newDate : null });
   };
 
   const handleAssigneeChange = (newAssignee: string) => {
     setAssigneeId(newAssignee);
-    updateCard(selectedCardModal._id, { assigneeId: newAssignee || null });
   };
 
-  // Custom Fields Actions
+  // Custom Fields Actions (Local State)
   const handleCustomFieldValueChange = (fieldId: string, val: string) => {
     const updated = cardCustomFields.map((cf) =>
       cf.fieldId === fieldId ? { ...cf, value: val } : cf
     );
     setCardCustomFields(updated);
-    updateCard(selectedCardModal._id, { customFields: updated });
   };
 
   const handleAttachCustomField = (fieldId: string) => {
@@ -113,16 +168,23 @@ export default function CardDetailModal() {
     const initialVal = def.defaultValue || (def.fieldType === 'select' ? def.options[0] || '' : '');
     const updated = [...cardCustomFields, { fieldId, value: initialVal }];
     setCardCustomFields(updated);
-    updateCard(selectedCardModal._id, { customFields: updated });
   };
 
   const handleDetachCustomField = (fieldId: string) => {
     const updated = cardCustomFields.filter((cf) => cf.fieldId !== fieldId);
     setCardCustomFields(updated);
-    updateCard(selectedCardModal._id, { customFields: updated });
   };
 
-  // Checklist Actions
+  // Checklist Actions (Local State)
+  const handleAttachChecklist = () => {
+    setHasChecklist(true);
+  };
+
+  const handleDetachChecklist = () => {
+    setHasChecklist(false);
+    setChecklist([]);
+  };
+
   const handleAddChecklistItem = (e: React.FormEvent) => {
     e.preventDefault();
     if (newChecklistText.trim()) {
@@ -134,7 +196,6 @@ export default function CardDetailModal() {
       const updated = [...checklist, newItem];
       setChecklist(updated);
       setNewChecklistText('');
-      updateCard(selectedCardModal._id, { checklist: updated });
     }
   };
 
@@ -143,13 +204,11 @@ export default function CardDetailModal() {
       item.id === itemId ? { ...item, completed: !item.completed } : item
     );
     setChecklist(updated);
-    updateCard(selectedCardModal._id, { checklist: updated });
   };
 
   const handleDeleteChecklistItem = (itemId: string) => {
     const updated = checklist.filter((item) => item.id !== itemId);
     setChecklist(updated);
-    updateCard(selectedCardModal._id, { checklist: updated });
   };
 
   const handleDeleteCard = () => {
@@ -169,8 +228,14 @@ export default function CardDetailModal() {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] glass-panel relative">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in"
+      onClick={handleClose}
+    >
+      <div
+        className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] glass-panel relative"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
         <div className="p-6 border-b border-slate-800/80 flex items-start justify-between gap-4">
           <div className="flex-1">
@@ -178,13 +243,18 @@ export default function CardDetailModal() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              onBlur={handleTitleBlur}
               className="w-full bg-transparent text-xl font-black text-white outline-none border-b border-transparent focus:border-blue-500 pb-1 transition"
               placeholder="Card Title..."
             />
           </div>
           <div className="flex items-center gap-2">
+            {isDirty && (
+              <span className="hidden sm:inline-flex text-[11px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-full animate-pulse">
+                Unsaved changes
+              </span>
+            )}
             <button
+              type="button"
               onClick={handleDeleteCard}
               className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition"
               title="Delete Card"
@@ -192,10 +262,13 @@ export default function CardDetailModal() {
               <Trash2 className="w-5 h-5" />
             </button>
             <button
-              onClick={() => setSelectedCardModal(null)}
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition"
+              type="button"
+              onClick={handleSaveAndClose}
+              className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 px-4 py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold transition cursor-pointer"
+              title="Save & Close"
             >
-              <X className="w-5 h-5" />
+              <Save className="w-4 h-4" />
+              <span>Save & Close</span>
             </button>
           </div>
         </div>
@@ -276,7 +349,6 @@ export default function CardDetailModal() {
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              onBlur={handleDescriptionBlur}
               placeholder="Add a detailed description..."
               className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-3.5 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-blue-500 transition leading-relaxed resize-y"
             />
@@ -366,81 +438,105 @@ export default function CardDetailModal() {
             )}
           </div>
 
-          {/* Checklist Section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-300 flex items-center gap-2">
+          {/* Sub-tasks Checklist Section */}
+          {!hasChecklist ? (
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={handleAttachChecklist}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border border-dashed border-slate-800 hover:border-blue-500/50 hover:bg-slate-950/60 text-slate-400 hover:text-blue-400 transition text-xs font-semibold group"
+              >
+                <Plus className="w-4 h-4 text-blue-400 group-hover:scale-110 transition" />
                 <CheckSquare className="w-4 h-4 text-blue-400" />
-                <span>Sub-tasks Checklist</span>
-              </label>
-              {totalItems > 0 && (
-                <span className="text-xs font-semibold text-slate-400">
-                  {completedItems}/{totalItems} completed ({progressPercent}%)
-                </span>
-              )}
+                <span>Add Sub-tasks Checklist</span>
+              </button>
             </div>
-
-            {/* Progress Bar */}
-            {totalItems > 0 && (
-              <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full transition-all duration-300"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-            )}
-
-            {/* Checklist Items List */}
-            <div className="space-y-2">
-              {checklist.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between gap-3 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 group hover:border-slate-700 transition"
-                >
-                  <button
-                    type="button"
-                    onClick={() => handleToggleChecklist(item.id)}
-                    className="flex items-center gap-2.5 text-xs text-slate-200 text-left flex-1"
-                  >
-                    {item.completed ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    ) : (
-                      <Circle className="w-4 h-4 text-slate-600 shrink-0" />
-                    )}
-                    <span className={item.completed ? 'line-through text-slate-500' : 'text-slate-200'}>
-                      {item.text}
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-300 flex items-center gap-2">
+                  <CheckSquare className="w-4 h-4 text-blue-400" />
+                  <span>Sub-tasks Checklist</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  {totalItems > 0 && (
+                    <span className="text-xs font-semibold text-slate-400">
+                      {completedItems}/{totalItems} completed ({progressPercent}%)
                     </span>
-                  </button>
-
+                  )}
                   <button
                     type="button"
-                    onClick={() => handleDeleteChecklistItem(item.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-rose-400 rounded transition"
+                    onClick={handleDetachChecklist}
+                    className="p-1 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded transition"
+                    title="Detach Checklist"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
-              ))}
-            </div>
+              </div>
 
-            {/* Add Checklist Item Form */}
-            <form onSubmit={handleAddChecklistItem} className="flex items-center gap-2 pt-1">
-              <input
-                type="text"
-                placeholder="Add sub-task..."
-                value={newChecklistText}
-                onChange={(e) => setNewChecklistText(e.target.value)}
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500"
-              />
-              <button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-2 rounded-xl flex items-center gap-1 transition"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add</span>
-              </button>
-            </form>
-          </div>
+              {/* Progress Bar */}
+              {totalItems > 0 && (
+                <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full transition-all duration-300"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              )}
+
+              {/* Checklist Items List */}
+              <div className="space-y-2">
+                {checklist.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 group hover:border-slate-700 transition"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleToggleChecklist(item.id)}
+                      className="flex items-center gap-2.5 text-xs text-slate-200 text-left flex-1"
+                    >
+                      {item.completed ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      ) : (
+                        <Circle className="w-4 h-4 text-slate-600 shrink-0" />
+                      )}
+                      <span className={item.completed ? 'line-through text-slate-500' : 'text-slate-200'}>
+                        {item.text}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteChecklistItem(item.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-rose-400 rounded transition"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Checklist Item Form */}
+              <form onSubmit={handleAddChecklistItem} className="flex items-center gap-2 pt-1">
+                <input
+                  type="text"
+                  placeholder="Add sub-task..."
+                  value={newChecklistText}
+                  onChange={(e) => setNewChecklistText(e.target.value)}
+                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-blue-500"
+                />
+                <button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-2 rounded-xl flex items-center gap-1 transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add</span>
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </div>
     </div>

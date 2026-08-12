@@ -21,6 +21,12 @@ describe('CardDetailModal Unit Tests', () => {
     order: 0,
   };
 
+  const mockCardNoChecklist: ICardData = {
+    ...mockCard,
+    _id: 'card_2',
+    checklist: [],
+  };
+
   beforeEach(() => {
     useKanbanStore.setState({
       selectedCardModal: mockCard,
@@ -28,11 +34,12 @@ describe('CardDetailModal Unit Tests', () => {
       fetchUsers: vi.fn(),
       updateCard: vi.fn(),
       deleteCard: vi.fn(),
+      setSelectedCardModal: vi.fn(),
     });
     vi.restoreAllMocks();
   });
 
-  it('renders modal with card details and checklist progress', () => {
+  it('renders modal with card details and checklist progress when checklist exists', () => {
     render(<CardDetailModal />);
 
     expect(screen.getByDisplayValue('Implement Authentication')).toBeInTheDocument();
@@ -42,9 +49,30 @@ describe('CardDetailModal Unit Tests', () => {
     expect(screen.getByText('Subtask 2')).toBeInTheDocument();
   });
 
-  it('adds a new subtask to the checklist', async () => {
+  it('renders Add Sub-tasks Checklist button when card has no checklist', () => {
+    useKanbanStore.setState({ selectedCardModal: mockCardNoChecklist });
+    render(<CardDetailModal />);
+
+    expect(screen.getByRole('button', { name: /Add Sub-tasks Checklist/i })).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('Add sub-task...')).not.toBeInTheDocument();
+  });
+
+  it('attaches checklist when Add Sub-tasks Checklist button is clicked', async () => {
+    useKanbanStore.setState({ selectedCardModal: mockCardNoChecklist });
+    render(<CardDetailModal />);
+
+    const attachBtn = screen.getByRole('button', { name: /Add Sub-tasks Checklist/i });
+    await act(async () => {
+      fireEvent.click(attachBtn);
+    });
+
+    expect(screen.getByPlaceholderText('Add sub-task...')).toBeInTheDocument();
+  });
+
+  it('adds a new subtask to local checklist and calls updateCard on Save & Close', async () => {
     const updateCardSpy = vi.fn();
-    useKanbanStore.setState({ updateCard: updateCardSpy });
+    const setSelectedCardModalSpy = vi.fn();
+    useKanbanStore.setState({ updateCard: updateCardSpy, setSelectedCardModal: setSelectedCardModalSpy });
 
     render(<CardDetailModal />);
 
@@ -56,11 +84,44 @@ describe('CardDetailModal Unit Tests', () => {
       fireEvent.click(addButton);
     });
 
+    // Before clicking Save & Close, updateCard should NOT have been called
+    expect(updateCardSpy).not.toHaveBeenCalled();
+
+    // Click Save & Close button
+    const saveButton = screen.getByRole('button', { name: /Save & Close/i });
+    await act(async () => {
+      fireEvent.click(saveButton);
+    });
+
     expect(updateCardSpy).toHaveBeenCalledWith('card_1', expect.objectContaining({
       checklist: expect.arrayContaining([
         expect.objectContaining({ text: 'Subtask 3', completed: false }),
       ]),
     }));
+    expect(setSelectedCardModalSpy).toHaveBeenCalledWith(null);
+  });
+
+  it('triggers confirmation dialog when closing via backdrop click with unsaved changes', async () => {
+    const setSelectedCardModalSpy = vi.fn();
+    useKanbanStore.setState({ setSelectedCardModal: setSelectedCardModalSpy });
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    const { container } = render(<CardDetailModal />);
+
+    const titleInput = screen.getByPlaceholderText('Card Title...');
+    await act(async () => {
+      fireEvent.change(titleInput, { target: { value: 'Changed Title' } });
+    });
+
+    // Click backdrop overlay (container's first element)
+    const backdrop = container.firstChild as HTMLElement;
+    await act(async () => {
+      fireEvent.click(backdrop);
+    });
+
+    expect(confirmSpy).toHaveBeenCalledWith('You have unsaved changes. Are you sure you want to close without saving?');
+    // Since confirm returned false, modal should stay open (setSelectedCardModal not called with null)
+    expect(setSelectedCardModalSpy).not.toHaveBeenCalledWith(null);
   });
 
   it('triggers deleteCard confirmation when delete icon is clicked', () => {

@@ -121,7 +121,7 @@ interface KanbanStoreState {
   fetchPendingInvitations: () => Promise<void>;
   fetchBoardDetails: (boardId: string) => Promise<void>;
   fetchUsers: () => Promise<void>;
-  createBoard: (title: string, description: string) => Promise<void>;
+  createBoard: (title: string, description: string) => Promise<IBoardData | undefined>;
   updateBoardTitle: (boardId: string, title: string) => Promise<void>;
   deleteBoard: (boardId: string) => Promise<void>;
 
@@ -393,6 +393,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
           saveStatusMessage: 'Board created',
           isCreateBoardModalOpen: false,
         });
+        return data.board;
       } else {
         checkUnauthorized(res);
         set({ saveStatus: 'error', saveStatusMessage: 'Error creating board' });
@@ -726,7 +727,7 @@ export const useKanbanStore = create<KanbanStoreState>((set, get) => ({
   },
 
   moveColumnOptimistic: (boardId, sourceIndex, destIndex) => {
-    const cols = [...get().columns];
+    const cols = [...get().columns].sort((a, b) => a.order - b.order);
     const [movedCol] = cols.splice(sourceIndex, 1);
     cols.splice(destIndex, 0, movedCol);
 

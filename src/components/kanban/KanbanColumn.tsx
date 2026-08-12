@@ -43,7 +43,7 @@ export default function KanbanColumn({ column, cards, index }: KanbanColumnProps
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`w-80 shrink-0 bg-slate-900/90 border border-slate-800/80 rounded-2xl flex flex-col max-h-[calc(100vh-7.5rem)] shadow-xl ${
+          className={`w-60 shrink-0 bg-slate-900/90 border border-slate-800/80 rounded-2xl flex flex-col max-h-[calc(100vh-7.5rem)] shadow-xl ${
             snapshot.isDragging ? 'ring-2 ring-blue-500/50 shadow-2xl opacity-90' : ''
           }`}
         >

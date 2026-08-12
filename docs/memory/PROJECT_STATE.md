@@ -1,6 +1,6 @@
 # 📌 Current Project State (PROJECT_STATE.md)
 
-**Last Updated:** 2026-08-11
+**Last Updated:** 2026-08-12
 
 ---
 
@@ -37,10 +37,12 @@
 
 ## 🔄 Repository Status
 - Fully aligned with product features & business rules from `trilho_python`.
+- **Kanban Column Compact Width (`w-60`)**: Reduced column width from `w-80` to `w-60` across `KanbanColumn` and `KanbanBoard`.
+- **Robust Horizontal Column Drag-and-Drop Reordering**: Fixed trailing columns reordering bug by sorting store columns by `order` prior to splicing and scoping `@hello-pangea/dnd` `<Droppable>` bounds.
+- **Card Editing Local State, Save & Close & Optional Checklist**: Local state card detail editing (`CardDetailModal`) with explicit "Save & Close" button, optional Sub-tasks Checklist attachment (`+ Add Sub-tasks Checklist`), unsaved changes status pill, and confirmation dialog on modal close.
 - **LGPD Compliance Suite (Lei nº 13.709/2018)**: Public Privacy Policy (`/privacy`), Terms of Service (`/terms`), mandatory registration consent checkbox, self-service profile updates (`PUT /api/users/me`), structured JSON data export (`GET /api/users/me/export` - Art. 18, V), account deletion with cascading board ownership transfer (`DELETE /api/users/me` - Art. 18, VI), and account settings dashboard (`/profile`).
 - **Account Email Verification System**: `isVerified` flag, 24h token verification, login blocking (`403`), and resend activation workflow.
 - **PyJWT Password Recovery via Email System**: 15-min reset tokens, forgot/reset password pages and API endpoints.
 - **Board-Scoped Custom Fields Management System**: Board-scoped metadata (`text`, `number`, `select`, `date`), cross-board security isolation, default auto-attachment on card creation, card modal editing, and card tag badges.
 - **Datetime Selection for Card Due Dates**: HTML5 `<input type="datetime-local">` with date and time formatting on card badges.
-- **Column Drag-and-Drop Reordering**: Horizontal column move with batch API persistence (`POST /api/columns/reorder`).
-- Comprehensive fullstack unit testing suite with Vitest (96 passing unit tests across 25 files) & Playwright E2E testing suite (`e2e/profile-privacy.spec.ts`).
+- Comprehensive fullstack unit testing suite with Vitest (99 passing unit tests across 25 files) & Playwright E2E testing suite (9 passing E2E tests across 3 spec files).

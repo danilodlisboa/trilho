@@ -43,3 +43,10 @@ This document stores extra-code context, implicit business rules, design prefere
 - **Data Subject Rights Self-Service (`/profile`):** Users must be provided with self-service profile updating (`PUT /api/users/me`), structured JSON personal data export (`GET /api/users/me/export` - Art. 18, V), and account deletion (`DELETE /api/users/me` - Art. 18, VI).
 - **Cascading Deletion & Ownership Transfer:** Account deletion (`DELETE /api/users/me`) must require email confirmation string verification. Sole-owned boards are deleted with all associated columns, cards, and custom field definitions; shared boards transfer ownership to the first remaining member. Assigned cards are unassigned (`assigneeId = null`) and member lists/invitations are scrubbed.
 
+### 9. Card Modal Local State & Explicit Save Flow Directive
+- **Local State Editing:** Card modifications inside `CardDetailModal` (title, description, priority, due date, assignee, custom fields, checklist) must be managed in local component state without sending network API requests per keystroke or field change.
+- **Explicit Save & Close Button:** Changes are committed and the modal is closed when clicking the **Save & Close** button positioned at the far right corner of the header.
+- **Optional Sub-tasks Checklist:** Cards without sub-tasks hide the checklist list and input form, rendering an `+ Add Sub-tasks Checklist` button. Clicking the button attaches the checklist and reveals the item list and input form. A detach icon in the checklist header allows detaching the checklist.
+- **Header X Button Removal & Backdrop Closing Guard:** The 'X' close button is removed from the modal header. Closing via backdrop overlay click or Escape key triggers an unsaved changes confirmation dialog (`confirm(...)`) if local modifications (`isDirty`) exist. Confirming discards unsaved changes and closes the modal; canceling retains local modifications and keeps the modal open.
+
+

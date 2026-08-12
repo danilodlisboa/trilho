@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useKanbanStore } from '@/store/useKanbanStore';
 import { X, Layout, Plus, Loader2 } from 'lucide-react';
 
 export default function CreateBoardModal() {
+  const router = useRouter();
   const { isCreateBoardModalOpen, setIsCreateBoardModalOpen, createBoard, saveStatus } = useKanbanStore();
 
   const [title, setTitle] = useState('');
@@ -15,9 +17,12 @@ export default function CreateBoardModal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim()) {
-      await createBoard(title.trim(), description.trim());
+      const newBoard = await createBoard(title.trim(), description.trim());
       setTitle('');
       setDescription('');
+      if (newBoard?._id) {
+        router.push(`/board/${newBoard._id}`);
+      }
     }
   };
 
