@@ -49,4 +49,7 @@ This document stores extra-code context, implicit business rules, design prefere
 - **Optional Sub-tasks Checklist:** Cards without sub-tasks hide the checklist list and input form, rendering an `+ Add Sub-tasks Checklist` button. Clicking the button attaches the checklist and reveals the item list and input form. A detach icon in the checklist header allows detaching the checklist.
 - **Header X Button Removal & Backdrop Closing Guard:** The 'X' close button is removed from the modal header. Closing via backdrop overlay click or Escape key triggers an unsaved changes confirmation dialog (`confirm(...)`) if local modifications (`isDirty`) exist. Confirming discards unsaved changes and closes the modal; canceling retains local modifications and keeps the modal open.
 
+### 10. Git Commit Directive
+- **No Automatic Commits to Main:** NEVER create git commits (`git commit`) directly on the `main` branch unless explicitly instructed or requested by the user.
+
 
