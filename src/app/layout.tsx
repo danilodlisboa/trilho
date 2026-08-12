@@ -6,6 +6,14 @@ import AuthProvider from '@/components/providers/AuthProvider';
 export const metadata: Metadata = {
   title: 'Trilho - Fullstack Kanban Project Manager',
   description: 'Fullstack NoSQL Kanban management system built with Next.js, Zustand, and MongoDB',
+  icons: {
+    icon: [
+      { url: '/icon.png', type: 'image/png' },
+      { url: '/favicon.ico', type: 'image/x-icon' },
+    ],
+    shortcut: '/icon.png',
+    apple: '/icon.png',
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

@@ -51,9 +51,11 @@ export default function RegisterPage() {
 
       <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative z-10 animate-fade-in">
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-blue-500/20 mb-3">
-            <Kanban className="w-8 h-8" />
-          </div>
+          <img
+            src="/icon.png"
+            alt="Trilho Logo"
+            className="w-16 h-16 rounded-2xl shadow-xl shadow-blue-500/20 mb-3 object-cover border border-slate-700/50"
+          />
           <h1 className="text-2xl font-black text-white tracking-wide">Create Account on Trilho</h1>
           <p className="text-xs text-slate-400 mt-1">Organize your projects and tasks in seconds</p>
         </div>

@@ -139,9 +139,11 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl glass-panel space-y-6">
         <div className="flex items-center justify-center gap-2">
-          <div className="p-2.5 bg-blue-600/20 border border-blue-500/30 rounded-2xl">
-            <Kanban className="w-6 h-6 text-blue-400" />
-          </div>
+          <img
+            src="/icon.png"
+            alt="Trilho Logo"
+            className="w-10 h-10 rounded-xl shadow-md shadow-blue-500/20 object-cover border border-slate-700/50"
+          />
           <span className="text-2xl font-black text-white tracking-tight">Trilho</span>
         </div>
 

@@ -4,9 +4,9 @@ This document records the chronological history of features, bug fixes, architec
 
 ## 📅 2026-08-12
 
-- **[UI-04 Horizontal Canvas Drag-to-Scroll] Board Canvas Mouse Drag-to-Scroll (`src/components/kanban/KanbanBoard.tsx`)**:
-  - Implemented smooth horizontal click & drag scrolling for the Kanban board canvas when clicking outside columns, cards, buttons, or input controls.
-  - Excluded interactive inputs, buttons, and drag handles (`[data-rfd-draggable-id]`, `[data-rfd-drag-handle-context-id]`) to maintain standard column and card drag-and-drop mechanics without conflict.
+- **[BRAND-01 Custom Trilho Icon & Favicon] Unique Railway + Kanban Brand Icon (`public/icon.png`, `public/favicon.ico`, `src/app/layout.tsx`, `src/components/layout/Sidebar.tsx`, `src/app/login/page.tsx`, etc.)**:
+  - Designed and generated a custom brand logo fusing 3 vertical Kanban columns with high-tech curved train rails (*trilho de trem*) in a glowing cyan/indigo gradient on dark squircle tile background.
+  - Set logo as official favicon (`/favicon.ico`), app icon (`/icon.png`), layout metadata (`icons`), sidebar header, login, register, forgot-password, reset-password, resend-verification, and email verification pages.
 - **[UI-03 Column Width Compactness] Updated Column Width to `w-60` (`src/components/kanban/KanbanColumn.tsx`, `src/components/kanban/KanbanBoard.tsx`, `e2e/board-card.spec.ts`)**: Reduced Kanban column width from `w-80` to `w-60` across `KanbanColumn`, the "Add Column" button box, and Playwright E2E locators for a cleaner, more compact visual presentation.
 - **[BUG-17 Column Reordering Fix for Trailing Columns] Droppable Boundaries & Store Sorting (`src/store/useKanbanStore.ts`, `src/components/kanban/KanbanBoard.tsx`)**:
   - Updated `moveColumnOptimistic` in Zustand store to sort `columns` by `order` prior to splicing, ensuring UI index matches store index.

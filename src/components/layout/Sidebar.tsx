@@ -118,9 +118,11 @@ export default function Sidebar() {
         <div className="p-4 border-b border-slate-800/60 flex items-center justify-between">
           {!isSidebarContracted ? (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black shadow-lg shadow-blue-500/20">
-                T
-              </div>
+              <img
+                src="/icon.png"
+                alt="Trilho Logo"
+                className="w-8 h-8 rounded-lg shadow-lg shadow-blue-500/20 object-cover"
+              />
               <div>
                 <h1 className="font-extrabold text-white text-base tracking-wide flex items-center gap-1.5">
                   Trilho
@@ -129,9 +131,11 @@ export default function Sidebar() {
               </div>
             </div>
           ) : (
-            <div className="mx-auto w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black">
-              T
-            </div>
+            <img
+              src="/icon.png"
+              alt="Trilho Logo"
+              className="mx-auto w-8 h-8 rounded-lg shadow-lg shadow-blue-500/20 object-cover"
+            />
           )}
         </div>
 
