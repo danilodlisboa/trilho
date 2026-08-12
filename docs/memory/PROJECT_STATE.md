@@ -37,6 +37,7 @@
 
 ## 🔄 Repository Status
 - Fully aligned with product features & business rules from `trilho_python`.
+- **Horizontal Canvas Drag-to-Scroll**: Smooth horizontal click & drag panning across the Kanban board when dragging outside columns or cards, without needing to interact directly with scrollbars.
 - **Kanban Column Compact Width (`w-60`)**: Reduced column width from `w-80` to `w-60` across `KanbanColumn` and `KanbanBoard`.
 - **Robust Horizontal Column Drag-and-Drop Reordering**: Fixed trailing columns reordering bug by sorting store columns by `order` prior to splicing and scoping `@hello-pangea/dnd` `<Droppable>` bounds.
 - **Card Editing Local State, Save & Close & Optional Checklist**: Local state card detail editing (`CardDetailModal`) with explicit "Save & Close" button, optional Sub-tasks Checklist attachment (`+ Add Sub-tasks Checklist`), unsaved changes status pill, and confirmation dialog on modal close.

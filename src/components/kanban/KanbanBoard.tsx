@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { useKanbanStore } from '@/store/useKanbanStore';
 import KanbanColumn from './KanbanColumn';
@@ -23,6 +23,57 @@ export default function KanbanBoard() {
 
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColTitle, setNewColTitle] = useState('');
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isDraggingCanvas = useRef(false);
+  const startX = useRef(0);
+  const startScrollLeft = useRef(0);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    // Don't drag-scroll canvas if clicking on interactive elements, columns, or cards
+    if (
+      target.closest(
+        'button, input, textarea, select, a, option, [data-rfd-drag-handle-context-id], [data-rfd-draggable-id]'
+      )
+    ) {
+      return;
+    }
+
+    if (!scrollRef.current) return;
+    isDraggingCanvas.current = true;
+    startX.current = e.pageX - scrollRef.current.offsetLeft;
+    startScrollLeft.current = scrollRef.current.scrollLeft;
+    scrollRef.current.style.cursor = 'grabbing';
+    scrollRef.current.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingCanvas.current || !scrollRef.current) return;
+      e.preventDefault();
+      const x = e.pageX - scrollRef.current.offsetLeft;
+      const walk = (x - startX.current) * 1.2;
+      scrollRef.current.scrollLeft = startScrollLeft.current - walk;
+    };
+
+    const handleMouseUp = () => {
+      if (isDraggingCanvas.current) {
+        isDraggingCanvas.current = false;
+        if (scrollRef.current) {
+          scrollRef.current.style.cursor = '';
+          scrollRef.current.style.userSelect = '';
+        }
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
 
   const handleDragEnd = (result: DropResult) => {
     const { destination, source, draggableId, type } = result;
@@ -106,7 +157,11 @@ export default function KanbanBoard() {
   return (
     <>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex-1 p-6 overflow-x-auto">
+        <div
+          ref={scrollRef}
+          onMouseDown={handleMouseDown}
+          className="flex-1 p-6 overflow-x-auto"
+        >
           <div className="flex gap-5 items-start min-h-[calc(100vh-12rem)] pb-4">
             <Droppable droppableId="board-columns" direction="horizontal" type="COLUMN">
               {(provided) => (
