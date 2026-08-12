@@ -37,3 +37,9 @@ This document stores extra-code context, implicit business rules, design prefere
 - **Mandatory Test Coverage:** If automated tests do not exist for the new functionality or modified code path, corresponding unit, API, or E2E tests MUST be written and implemented.
 - **Collect & Evaluate Results:** The agent MUST inspect test execution logs and outputs.
 - **Iterative Debugging Until Success:** If any test fails, the agent MUST evaluate the root cause, fix the code and/or the test assertions, and re-run until 100% test success is achieved before declaring the task finished.
+
+### 8. LGPD Data Protection Suite Compliance Directive (Lei nº 13.709/2018)
+- **Mandatory Consent & Transparency:** Registration (`/register`) requires explicit opt-in checkbox consent for Terms of Service (`/terms`) and Privacy Policy (`/privacy`), validated on both frontend and backend (`POST /api/register`).
+- **Data Subject Rights Self-Service (`/profile`):** Users must be provided with self-service profile updating (`PUT /api/users/me`), structured JSON personal data export (`GET /api/users/me/export` - Art. 18, V), and account deletion (`DELETE /api/users/me` - Art. 18, VI).
+- **Cascading Deletion & Ownership Transfer:** Account deletion (`DELETE /api/users/me`) must require email confirmation string verification. Sole-owned boards are deleted with all associated columns, cards, and custom field definitions; shared boards transfer ownership to the first remaining member. Assigned cards are unassigned (`assigneeId = null`) and member lists/invitations are scrubbed.
+

@@ -200,13 +200,18 @@ export default function LoginPage() {
         </form>
 
         {/* Footer Navigation */}
-        <div className="mt-6 pt-6 border-t border-slate-800 text-center">
+        <div className="mt-6 pt-6 border-t border-slate-800 text-center space-y-2">
           <p className="text-xs text-slate-400">
             Don't have an account?{' '}
             <Link href="/register" className="text-blue-400 font-semibold hover:underline">
               Register here
             </Link>
           </p>
+          <div className="flex items-center justify-center gap-3 text-[11px] text-slate-500">
+            <Link href="/privacy" className="hover:text-slate-400 underline">Privacy Policy</Link>
+            <span>•</span>
+            <Link href="/terms" className="hover:text-slate-400 underline">Terms of Service</Link>
+          </div>
         </div>
       </div>
     </div>

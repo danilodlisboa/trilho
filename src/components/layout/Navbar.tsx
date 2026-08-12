@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useKanbanStore } from '@/store/useKanbanStore';
@@ -15,6 +16,7 @@ import {
   Edit2,
   Check,
   PanelLeft,
+  UserCheck,
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -231,6 +233,15 @@ export default function Navbar() {
                       <p className="text-[11px] text-slate-400 truncate">{session.user.email}</p>
                     </div>
                   </div>
+
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl transition text-left mb-1"
+                  >
+                    <UserCheck className="w-4 h-4 text-indigo-400" />
+                    <span>Account & Privacy</span>
+                  </Link>
 
                   <button
                     onClick={() => signOut({ callbackUrl: '/login' })}

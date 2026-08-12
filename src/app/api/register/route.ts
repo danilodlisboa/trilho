@@ -14,10 +14,17 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, email, password } = await req.json();
+    const { name, email, password, agreedToTerms } = await req.json();
 
     if (!name?.trim() || !email?.trim() || !password) {
       return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
+    }
+
+    if (!agreedToTerms) {
+      return NextResponse.json(
+        { error: 'You must accept the Terms of Service and Privacy Policy to register.' },
+        { status: 400 }
+      );
     }
 
     const trimmedName = name.trim().slice(0, 100);

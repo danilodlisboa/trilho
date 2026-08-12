@@ -6,6 +6,11 @@ vi.mock('@/lib/db', () => ({
   connectToDatabase: vi.fn().mockResolvedValue(true),
 }));
 
+vi.mock('@/lib/rateLimit', () => ({
+  isRateLimited: vi.fn().mockReturnValue(false),
+  getClientIp: vi.fn().mockReturnValue('127.0.0.1'),
+}));
+
 vi.mock('@/models/User', () => ({
   User: {
     findOne: vi.fn(),
@@ -21,7 +26,7 @@ describe('POST /api/register API Route Unit Tests', () => {
   it('returns 400 when required fields are missing', async () => {
     const req = new Request('http://localhost/api/register', {
       method: 'POST',
-      body: JSON.stringify({ name: 'Test User', email: '' }),
+      body: JSON.stringify({ name: 'Test User', email: '', agreedToTerms: true }),
     });
 
     const res = await POST(req);
@@ -31,10 +36,23 @@ describe('POST /api/register API Route Unit Tests', () => {
     expect(data.error).toBe('All fields are required.');
   });
 
+  it('returns 400 when agreedToTerms is missing or false', async () => {
+    const req = new Request('http://localhost/api/register', {
+      method: 'POST',
+      body: JSON.stringify({ name: 'Test User', email: 'test@example.com', password: 'password123', agreedToTerms: false }),
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toBe('You must accept the Terms of Service and Privacy Policy to register.');
+  });
+
   it('returns 400 when password is too short', async () => {
     const req = new Request('http://localhost/api/register', {
       method: 'POST',
-      body: JSON.stringify({ name: 'Test User', email: 'test@example.com', password: '123' }),
+      body: JSON.stringify({ name: 'Test User', email: 'test@example.com', password: '123', agreedToTerms: true }),
     });
 
     const res = await POST(req);
@@ -47,7 +65,7 @@ describe('POST /api/register API Route Unit Tests', () => {
   it('returns 400 when email format is invalid', async () => {
     const req = new Request('http://localhost/api/register', {
       method: 'POST',
-      body: JSON.stringify({ name: 'Test User', email: 'invalid-email-string', password: 'password123' }),
+      body: JSON.stringify({ name: 'Test User', email: 'invalid-email-string', password: 'password123', agreedToTerms: true }),
     });
 
     const res = await POST(req);
@@ -62,7 +80,7 @@ describe('POST /api/register API Route Unit Tests', () => {
 
     const req = new Request('http://localhost/api/register', {
       method: 'POST',
-      body: JSON.stringify({ name: 'Test User', email: 'test@example.com', password: 'password123' }),
+      body: JSON.stringify({ name: 'Test User', email: 'test@example.com', password: 'password123', agreedToTerms: true }),
     });
 
     const res = await POST(req);
@@ -83,7 +101,7 @@ describe('POST /api/register API Route Unit Tests', () => {
 
     const req = new Request('http://localhost/api/register', {
       method: 'POST',
-      body: JSON.stringify({ name: 'Test User', email: 'test@example.com', password: 'password123' }),
+      body: JSON.stringify({ name: 'Test User', email: 'test@example.com', password: 'password123', agreedToTerms: true }),
     });
 
     const res = await POST(req);

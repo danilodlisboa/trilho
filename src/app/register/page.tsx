@@ -10,11 +10,17 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!agreedToTerms) {
+      setError('You must accept the Terms of Service and Privacy Policy to register.');
+      return;
+    }
+
     setError('');
     setIsLoading(true);
 
@@ -22,7 +28,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, agreedToTerms }),
       });
 
       const data = await res.json();
@@ -108,9 +114,30 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          <div className="pt-1">
+            <label className="flex items-start gap-2.5 text-xs text-slate-300 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-0.5 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500 h-4 w-4 shrink-0"
+              />
+              <span className="leading-normal">
+                I agree to the{' '}
+                <Link href="/terms" target="_blank" className="text-blue-400 font-semibold hover:underline">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link href="/privacy" target="_blank" className="text-blue-400 font-semibold hover:underline">
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
+          </div>
+
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !agreedToTerms}
             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition disabled:opacity-50 mt-2"
           >
             <span>{isLoading ? 'Creating account...' : 'Create Account'}</span>

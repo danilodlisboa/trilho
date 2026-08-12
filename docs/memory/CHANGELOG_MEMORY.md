@@ -4,6 +4,26 @@ This document records the chronological history of features, bug fixes, architec
 
 ## 📅 2026-08-11
 
+### 🛡️ Full LGPD Compliance Suite Implementation (`docs/LGPD.md`, `src/app/`, `e2e/profile-privacy.spec.ts`)
+- **[LGPD-01 Public Legal Pages & Footer Links] Privacy Policy & Terms of Service ([src/app/privacy/page.tsx](file:///c:/Users/Danilo/code/trilho/src/app/privacy/page.tsx), [src/app/terms/page.tsx](file:///c:/Users/Danilo/code/trilho/src/app/terms/page.tsx), [src/app/login/page.tsx](file:///c:/Users/Danilo/code/trilho/src/app/login/page.tsx))**:
+  - Implemented public Privacy Policy (`/privacy`) detailing data controller (`privacy@trilho.online`), LGPD Art. 7 legal bases, third-party processors (DiceBear, Resend API), retention periods, and data subject rights (Art. 18).
+  - Implemented public Terms of Service (`/terms`). Added direct footer navigation links on `/login`.
+- **[LGPD-02 Registration Consent Checkbox] Opt-In Consent Validation ([src/app/register/page.tsx](file:///c:/Users/Danilo/code/trilho/src/app/register/page.tsx), [src/app/api/register/route.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/register/route.ts))**:
+  - Added mandatory `[x] I agree to the Terms of Service and Privacy Policy` consent checkbox on `/register`. Enforced `agreedToTerms: true` validation on backend returning `400 Bad Request` if unaccepted.
+- **[LGPD-03 Profile Editing & Data Export API] Self-Service Data Portability ([src/app/api/users/me/route.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/users/me/route.ts), [src/app/api/users/me/export/route.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/users/me/export/route.ts))**:
+  - Implemented `PUT /api/users/me` endpoint for user name and avatar updating.
+  - Implemented `GET /api/users/me/export` endpoint generating structured `trilho-personal-data.json` export files (Art. 18, V).
+- **[LGPD-04 Cascading Account Deletion & Ownership Transfer] Right to be Forgotten ([src/app/api/users/me/route.ts](file:///c:/Users/Danilo/code/trilho/src/app/api/users/me/route.ts))**:
+  - Implemented `DELETE /api/users/me` handler requiring email confirmation string.
+  - Cascades board deletion for sole-owned boards (deleting columns, cards, and custom field definitions) and transfers ownership to remaining members for multi-member boards.
+  - Clears user from member lists, unassigns cards (`assigneeId = null`), scrubs invitations, and erases `User` records.
+- **[LGPD-05 Account Settings Dashboard & Deletion Modal] User Interface ([src/app/profile/page.tsx](file:///c:/Users/Danilo/code/trilho/src/app/profile/page.tsx), [src/components/modals/DeleteAccountModal.tsx](file:///c:/Users/Danilo/code/trilho/src/components/modals/DeleteAccountModal.tsx), [src/components/layout/Navbar.tsx](file:///c:/Users/Danilo/code/trilho/src/components/layout/Navbar.tsx))**:
+  - Created `/profile` dashboard with Profile Information, LGPD Data Export button, and Danger Zone.
+  - Created `<DeleteAccountModal />` with typed email verification. Added "Account & Privacy" link to Navbar user dropdown menu.
+- **[LGPD-06 Full Automated Test Coverage] Vitest & Playwright E2E Suites ([src/app/api/__tests__/](file:///c:/Users/Danilo/code/trilho/src/app/api/__tests__/), [e2e/profile-privacy.spec.ts](file:///c:/Users/Danilo/code/trilho/e2e/profile-privacy.spec.ts))**:
+  - Added unit test suites `legalPages.test.ts`, `register.test.ts`, `usersMe.test.ts`, and `accountDeletion.test.ts` (100% PASS - 96/96 Vitest unit tests passed).
+  - Added Playwright E2E test suite `e2e/profile-privacy.spec.ts` testing legal pages, consent checkbox, and navigation (100% PASS - 9/9 E2E tests passed).
+
 ### 📜 System Protocol Update (`AGENTS.md`, `docs/memory/USER_DIRECTIVES.md`)
 - **[RULE-01 Mandatory Test Execution & Coverage Directive] Registered Core Testing Protocol ([AGENTS.md](file:///c:/Users/Danilo/code/trilho/AGENTS.md), [USER_DIRECTIVES.md](file:///c:/Users/Danilo/code/trilho/docs/memory/USER_DIRECTIVES.md))**: Formally registered project directive:
   1. Whenever implementing a new feature or significant bug fix/correction, automated tests MUST be executed.

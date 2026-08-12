@@ -31,3 +31,5 @@ tools/
 # Docs
 docs/
 *.md
+docs/plans/
+plans/
